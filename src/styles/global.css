@@ -2045,6 +2045,38 @@ tbody tr + tr > * {
   }
 }
 
+/* ---------- Pictures from the documents (PhotoStrip.astro) ---------- */
+.photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 40px 32px;
+  align-items: start;
+  margin: clamp(32px, 5vw, 56px) 0 0;
+  padding: 8px 0 0;
+  list-style: none;
+}
+
+@media (min-width: 700px) {
+  .photos__item--wide {
+    grid-column: span 2;
+  }
+}
+
+.photos .polaroid {
+  margin: 0;
+}
+
+/* Diagrams and screenshots keep their own shape. */
+.photos .polaroid img {
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+
+.photos .polaroid figcaption {
+  font-size: 21px;
+}
+
 /* ---------- The badge (About page, src/scripts/badge.ts) ----------
    A card on a burgundy cord, pinned to the board. Without the script: the cord is a straight
    line and both faces show, one under the other. The script adds .is-live (the faces stack and

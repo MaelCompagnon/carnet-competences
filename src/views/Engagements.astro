@@ -2,6 +2,8 @@
 import Base from '../layouts/Base.astro';
 import DocGallery from '../components/DocGallery.astro';
 import PageHead from '../components/PageHead.astro';
+import PhotoStrip from '../components/PhotoStrip.astro';
+import { photos } from '../data/photos';
 import Sections from '../components/Sections.astro';
 import { inline, loadPage, render, withoutTables } from '../lib/content';
 import { docsOf } from '../lib/documents';
@@ -28,6 +30,7 @@ const certsIntro = withoutTables(certs).filter((x) => x.type !== 'list');
     <div class="column">
       <Sections sections={sections.slice(0, -1)} />
     </div>
+    <PhotoStrip lang={lang} photos={photos.engagements} />
     <section class="section" aria-labelledby={certs.id}>
       <h2 id={certs.id} set:html={inline(certs.title)} />
       {certsIntro.length > 0 && <div class="prose column" set:html={render(certsIntro)} />}

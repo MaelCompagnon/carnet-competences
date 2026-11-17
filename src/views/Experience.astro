@@ -5,6 +5,8 @@ import Base from '../layouts/Base.astro';
 import Arrow from '../components/Arrow.astro';
 import DocGallery from '../components/DocGallery.astro';
 import PageHead from '../components/PageHead.astro';
+import PhotoStrip from '../components/PhotoStrip.astro';
+import { photos } from '../data/photos';
 import Sections from '../components/Sections.astro';
 import fs from 'node:fs';
 import { at, fieldHtml, fieldsOf, inline, loadPage, plain, render } from '../lib/content';
@@ -62,6 +64,8 @@ const reports = docsOf(lang, 'report').filter((d) => raw.includes(d.file));
         </figure>
       )
     }
+
+    {(id === 'salmar' || id === 'ageo') && <PhotoStrip lang={lang} photos={photos[id]} />}
 
     <div class="column">
       <Sections sections={sections} />

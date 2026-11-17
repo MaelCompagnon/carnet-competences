@@ -1,0 +1,30 @@
+---
+// A few pictures pinned to the board: polaroids with a handwritten caption.
+// Diagrams keep their whole frame (no square crop). The list comes from src/data/photos.ts.
+import { Image } from 'astro:assets';
+import type { Photo } from '../data/photos';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  photos: Photo[];
+}
+
+const { lang, photos } = Astro.props;
+const tilt = ['-1.4', '1.1', '-0.8', '1.5'];
+---
+
+<ul class="photos" aria-label={ui[lang].photos}>
+  {
+    photos.map((p, i) => (
+      <li class:list={['photos__item', p.src.width > p.src.height * 1.4 && 'photos__item--wide']} data-reveal>
+        <figure class="polaroid" style={`--r:${tilt[i % tilt.length]}deg`}>
+          <span class="tape tape--tl" aria-hidden="true" />
+          <Image src={p.src} alt={p.alt[lang]} widths={[360, 720, 1080]} sizes="(max-width: 700px) 88vw, (max-width: 1100px) 45vw, 520px" />
+          <figcaption>{p.caption[lang]}</figcaption>
+        </figure>
+      </li>
+    ))
+  }
+</ul>

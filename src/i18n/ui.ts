@@ -18,6 +18,7 @@ export const ui = {
     allExperiences: 'Toutes les expériences',
     junctionPhotoAlt: "Maël Compagnon à Junction 2026, devant l'affiche « The European Tech Renaissance ».",
     portraitAlt: 'Portrait de Maël Compagnon',
+    photos: 'En images',
     badge: {
       flip: 'Retourner le badge',
       back: 'Au dos',
@@ -85,6 +86,7 @@ export const ui = {
     allExperiences: 'All experiences',
     junctionPhotoAlt: 'Maël Compagnon at Junction 2026, in front of the poster "The European Tech Renaissance".',
     portraitAlt: 'Portrait of Maël Compagnon',
+    photos: 'In pictures',
     badge: {
       flip: 'Flip the badge',
       back: 'On the back',
