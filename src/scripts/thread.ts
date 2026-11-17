@@ -136,16 +136,20 @@ export function initThread(host: HTMLElement) {
 
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', later);
-  // Fonts and images change the height of the page after the first layout.
-  new ResizeObserver(later).observe(host);
-  document.fonts?.ready.then(later);
+  // Fonts and images change the height of the page after the first layout. The first measure
+  // waits until the browser is idle: it reads the layout of the whole page.
+  const observe = () => {
+    new ResizeObserver(later).observe(host);
+    document.fonts?.ready.then(later);
+  };
+  if ('requestIdleCallback' in window) requestIdleCallback(observe, { timeout: 1000 });
+  else setTimeout(observe, 200);
   window.addEventListener('load', later, { once: true });
   // A printed page shows the whole thread, as without JavaScript.
   window.addEventListener('beforeprint', () => {
     path!.style.strokeDashoffset = '0';
     pins.forEach((p) => p.classList.remove('is-wait'));
   });
-  build();
 }
 
 type P = { x: number; y: number };
