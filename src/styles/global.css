@@ -1606,11 +1606,18 @@ a.card:hover {
   line-height: 1.35;
 }
 
-.doc__meta {
+.doc__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.doc__note {
   margin-top: -8px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
+  font-family: var(--font-text);
+  font-size: 13.5px;
+  line-height: 1.4;
   color: var(--muted);
 }
 
@@ -1618,6 +1625,7 @@ a.card:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: auto;
 }
 
 /* Full-screen viewer (a modal dialog: the page behind is inert). */

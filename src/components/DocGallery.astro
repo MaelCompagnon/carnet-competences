@@ -57,10 +57,7 @@ const describe = (doc: DocView, page: number) => `${d.page} ${page} ${d.of} ${do
           )}
           <div class="doc__body">
             <H class="doc__title">{doc.title}</H>
-            <p class="doc__meta">
-              PDF · {d.pages(doc.pages)} · {doc.size}
-              {partial && <span> · {d.firstOnly}</span>}
-            </p>
+            {partial && <p class="doc__note">{d.firstOnly}</p>}
             <div class="doc__actions">
               <a class="btn btn--ink btn--small" href={doc.file} download>
                 {d.download} (PDF, {doc.size})<span class="sr-only"> : {doc.title}</span>
