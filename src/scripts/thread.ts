@@ -1,20 +1,28 @@
-// The thread of the one-page: a burgundy string, as on a cork board, from one chapter number
-// (the "pins") to the next. No library: it must also be drawn with "reduce motion", where
-// GSAP and Lenis are never loaded. Without JavaScript, a straight CSS line stands in for it.
+// The thread: a burgundy string, as on a cork board, from one chapter number (the "pins") to
+// the next, on the one-page and down every detailed page. No library: it must also be drawn
+// with "reduce motion", where GSAP and Lenis are never loaded, and the detailed pages have no
+// GSAP at all (Lighthouse). Without JavaScript, a straight CSS line stands in for it.
+//
+// On a wide screen the thread winds around the blocks of the page: it runs along one margin,
+// crosses the page through the spaces between blocks (curling in the larger ones), and always
+// comes back to the left margin to go through a pin. On a phone it stays in the left margin.
 //
 // With motion allowed, the thread is drawn as the reader scrolls, and each pin bounces then
 // fills when the tip of the thread reaches it. The path is computed from the real position of
 // the pins, and computed again whenever the page changes size (fonts, images, resize).
 
 const TIP = 0.62; // the tip of the thread sits at 62 % of the screen height
-const STEP = 280; // one wobble point every 280 px between two pins
+const STEP = 280; // one wobble point every 280 px along a margin
+const LANE = 30; // distance between the thread and the blocks it runs along
+const MIN_GAP = 44; // the thread only crosses the page through a space at least this high
+const LOOP_GAP = 96; // ... and only curls in a space at least this high
 
 export function initThread(host: HTMLElement) {
   const svg = host.querySelector<SVGSVGElement>('svg.thread');
   const path = svg?.querySelector<SVGPathElement>('path');
   const pins = [...host.querySelectorAll<HTMLElement>('[data-pin]')];
   const toc = [...host.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
-  if (!svg || !path || pins.length < 2) return;
+  if (!svg || !path) return;
 
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let total = 0;
@@ -45,31 +53,18 @@ export function initThread(host: HTMLElement) {
     });
     pinY = pts.map((p) => p.y);
     const narrow = window.innerWidth < 1024;
+    const rows = layoutRows(host, box);
     // Nothing moved (fonts, images or a resize that changed nothing): keep the thread as it is.
-    const key = `${w}x${h}|${pts.map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(' ')}`;
+    const key = `${w}x${h}|${pts.map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(' ')}|${rows.map((r) => `${Math.round(r.top)}-${Math.round(r.bottom)}`).join(' ')}`;
     if (key === lastKey) return;
     lastKey = key;
+    if (rows.length === 0) return;
 
-    // A loose thread: between two pins it swings into the left margin and wobbles a little.
     // The wobble comes from a fixed sequence, so the thread keeps its shape on every visit.
-    const out: { x: number; y: number }[] = [];
     let seed = 7;
     const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280) * 2 - 1;
-    for (let i = 0; i < pts.length; i++) {
-      const a = pts[i];
-      out.push(a);
-      const b = pts[i + 1] ?? { x: a.x, y: Math.min(h - 40, a.y + 260) };
-      const swing = narrow ? 0 : Math.min(64, Math.max(0, a.x - 18));
-      const n = Math.max(1, Math.round((b.y - a.y) / STEP));
-      for (let k = 1; k < n; k++) {
-        const f = k / n;
-        // Out into the margin and back: a sine arch, plus the wobble.
-        const arch = Math.sin(f * Math.PI);
-        const x = a.x + (b.x - a.x) * f - swing * arch + rand() * (narrow ? 2.5 : 10) * arch;
-        out.push({ x, y: a.y + (b.y - a.y) * f });
-      }
-      if (!pts[i + 1]) out.push(b); // the loose end, below the last pin
-    }
+    const out = narrow ? marginThread(pts, rows, h, rand) : windingThread(pts, rows, h, maxRight(host, box, w), rand);
+    if (out.length < 2) return;
 
     const segs = curves(out);
     path!.setAttribute('d', toPath(segs));
@@ -155,6 +150,195 @@ export function initThread(host: HTMLElement) {
 
 type P = { x: number; y: number };
 type Seg = [P, P, P, P];
+type Row = { top: number; bottom: number; left: number; right: number; pin?: P };
+
+// Blocks the thread goes around. Inside a stop element (a paragraph, a card…) it never looks further.
+const SKIP = '.thread, .toc, .sr-only, .skip, script, style, template, dialog, [hidden]';
+const STOP =
+  'p, h1, h2, h3, h4, h5, h6, ul, ol, dl, table, figure, img, picture, svg, a, button, blockquote, pre, form, details, .card, .postit, .polaroid, .badge, .btn, .pin-spacer, [data-thread-solid]';
+
+/**
+ * The page as a stack of rows: the blocks of the layout, merged when they sit side by side.
+ * The spaces between two rows are where the thread may cross the page.
+ * One read pass (getBoundingClientRect), no write.
+ */
+function layoutRows(host: HTMLElement, box: DOMRect): Row[] {
+  const blocks: Row[] = [];
+  const rectOf = (el: Element): Row | null => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return null;
+    return { top: r.top - box.top, bottom: r.bottom - box.top, left: r.left - box.left, right: r.right - box.left };
+  };
+  const union = (rs: Row[]): Row => ({
+    top: Math.min(...rs.map((r) => r.top)),
+    bottom: Math.max(...rs.map((r) => r.bottom)),
+    left: Math.min(...rs.map((r) => r.left)),
+    right: Math.max(...rs.map((r) => r.right)),
+  });
+  const visit = (el: Element, depth: number) => {
+    const own = rectOf(el);
+    if (!own) return;
+    if (depth > 0 && el.matches(STOP)) {
+      blocks.push(own);
+      return;
+    }
+    const kids: { el: Element; r: Row }[] = [];
+    for (const k of el.children) {
+      if (k.matches(SKIP) || getComputedStyle(k).position === 'fixed') continue;
+      const r = rectOf(k);
+      if (r) kids.push({ el: k, r });
+    }
+    if (kids.length === 0) {
+      if (depth > 0) blocks.push(own);
+      return;
+    }
+    // Blocks side by side (a grid, a photo beside a text) make one block: the thread goes around it.
+    const rs = kids.map((k) => k.r).sort((a, b) => a.top - b.top);
+    const sideBySide = rs.some((a, i) => rs.slice(i + 1).some((b) => b.top < a.bottom - 4 && a.top < b.bottom - 4));
+    // The padding of a container is free space: only its children count.
+    if (sideBySide && depth > 0) blocks.push(union(rs));
+    else kids.forEach((k) => visit(k.el, depth + 1));
+  };
+  visit(host, 0);
+
+  blocks.sort((a, b) => a.top - b.top);
+  const rows: Row[] = [];
+  for (const b of blocks) {
+    const last = rows[rows.length - 1];
+    if (last && b.top < last.bottom + 6) {
+      last.bottom = Math.max(last.bottom, b.bottom);
+      last.left = Math.min(last.left, b.left);
+      last.right = Math.max(last.right, b.right);
+    } else rows.push({ ...b });
+  }
+  return rows;
+}
+
+/** The thread stays clear of the table of contents fixed on the right of the one-page. */
+function maxRight(host: HTMLElement, box: DOMRect, w: number): number {
+  const toc = host.querySelector<HTMLElement>('.toc');
+  if (toc && getComputedStyle(toc).position === 'fixed') {
+    const r = toc.getBoundingClientRect();
+    if (r.width > 0) return Math.min(w - 14, r.left - box.left - 18);
+  }
+  return w - 14;
+}
+
+/** Phones: down the left margin, through the pins (on the one-page they sit in that margin). */
+function marginThread(pins: P[], rows: Row[], h: number, rand: () => number): P[] {
+  const contentLeft = Math.min(...rows.map((r) => r.left));
+  // One-page: the pins stand in a column in the margin, and the thread runs through them.
+  const column = pins.length > 1 && pins.every((p) => Math.abs(p.x - pins[0].x) < 4);
+  const lane = column ? pins[0].x : Math.max(6, contentLeft / 2);
+  const end = Math.min(h - 16, Math.max(rows[rows.length - 1].bottom + 30, (pins[pins.length - 1]?.y ?? 0) + 260));
+  const stops: P[] = [...pins.slice(1), { x: lane, y: end }];
+  const out: P[] = [];
+  let at: P = pins[0] ?? { x: lane, y: rows[0].top };
+  out.push(at);
+  for (const target of stops) {
+    if (target.y <= at.y) continue;
+    // A pin inside the text column: the thread leaves it for the margin, and comes back to the next one.
+    let y = at.y;
+    if (Math.abs(at.x - lane) > 4) out.push({ x: lane, y: (y = at.y + 30) });
+    const yEnd = Math.abs(target.x - lane) > 4 ? target.y - 30 : target.y;
+    const n = Math.max(1, Math.round((yEnd - y) / STEP));
+    for (let k = 1; k < n; k++) out.push({ x: lane + rand() * 2.5, y: y + ((yEnd - y) * k) / n });
+    if (yEnd !== target.y) out.push({ x: lane, y: yEnd });
+    out.push(target);
+    at = target;
+  }
+  return out;
+}
+
+/** Wide screens: around the blocks, across the page through the spaces between them. */
+function windingThread(pins: P[], rows: Row[], h: number, maxR: number, rand: () => number): P[] {
+  const contentLeft = Math.min(...rows.map((r) => r.left));
+  const contentRight = Math.max(...rows.map((r) => r.right));
+  const laneL = (r: Row) => Math.max(10, Math.min(r.left, contentLeft + 40) - LANE);
+  // On the right it hugs the wide blocks, and keeps a calm line beside the narrow ones.
+  const laneR = (r: Row) => Math.max(r.right, contentRight - 80) + LANE;
+  const fitsRight = (r: Row) => !r.pin && laneR(r) <= maxR;
+  for (const r of rows) r.pin = pins.find((p) => p.y >= r.top - 2 && p.y <= r.bottom + 2);
+  // A crossing after about three quarters of a screen on the same side.
+  const crossRun = Math.max(420, window.innerHeight * 0.75);
+
+  const out: P[] = [];
+  const push = (p: P) => {
+    const last = out[out.length - 1];
+    if (!last || Math.hypot(p.x - last.x, p.y - last.y) > 2) out.push(p);
+  };
+  let side: 'L' | 'R' = 'L';
+  let run = 0;
+  let crossings = 0;
+  const laneOf = (r: Row) => (side === 'L' ? laneL(r) : laneR(r));
+  const outward = () => (side === 'L' ? -1 : 1);
+
+  let first = pins[0] ? rows.findIndex((r) => r.pin === pins[0]) : 0;
+  if (first < 0) first = 0;
+  for (let i = first; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.pin && side === 'L') {
+      // Hooked on the pin, then back to the margin.
+      const pin = r.pin;
+      if (out.length) push({ x: laneL(r) - 6, y: pin.y - 34 });
+      push(pin);
+      push({ x: laneL(r), y: Math.max(pin.y + 34, r.bottom) });
+    } else {
+      const x = laneOf(r);
+      const n = Math.max(1, Math.round((r.bottom - r.top) / STEP));
+      for (let k = 0; k <= n; k++) {
+        const f = k / n;
+        push({ x: x + outward() * Math.sin(f * Math.PI) * 16 + rand() * 5, y: r.top + (r.bottom - r.top) * f });
+      }
+    }
+    run += r.bottom - r.top;
+    const next = rows[i + 1];
+    if (!next) break;
+    const gap = next.top - r.bottom;
+    const mustLeft = side === 'R' && !fitsRight(next);
+    const wants = run >= crossRun && gap >= MIN_GAP && (side === 'R' || fitsRight(next));
+    if (mustLeft || wants) {
+      const x0 = laneOf(r);
+      side = side === 'L' ? 'R' : 'L';
+      const x1 = laneOf(next);
+      cross(out, x0, x1, r.bottom, next.top, gap >= LOOP_GAP && crossings % 2 === 0, rand);
+      crossings++;
+      run = 0;
+    } else if (gap > 24) {
+      // Along a margin, the thread swings out a little in each space.
+      push({ x: (laneOf(r) + laneOf(next)) / 2 + outward() * (10 + rand() * 6), y: (r.bottom + next.top) / 2 });
+    }
+  }
+  const last = rows[rows.length - 1];
+  push({ x: laneOf(last) + outward() * 8, y: Math.min(h - 16, last.bottom + 50) });
+  return out;
+}
+
+/** From one margin to the other through the space between two rows, with a curl in the large ones. */
+function cross(out: P[], x0: number, x1: number, top: number, bottom: number, curl: boolean, rand: () => number) {
+  const gap = bottom - top;
+  const dir = Math.sign(x1 - x0) || 1;
+  // Rounded turns: the thread leaves the margin and reaches the other one at a slant.
+  const turn = Math.min(48, Math.abs(x1 - x0) * 0.08);
+  const ya = top + gap * 0.38;
+  const yb = bottom - gap * 0.38;
+  out.push({ x: x0 + dir * turn, y: ya });
+  if (curl) {
+    const r = Math.min(24, gap / 2 - 16);
+    const cx = x0 + (x1 - x0) * (0.4 + rand() * 0.15);
+    const cy = (ya + yb) / 2 + r * 0.4;
+    out.push({ x: cx - dir * r * 2.4, y: cy });
+    // Once around a circle that sits on the line: up the far side, over the top, down the near side.
+    for (let k = 0; k <= 6; k++) {
+      const a = Math.PI / 2 - (dir * ((k + 0.5) * Math.PI * 2)) / 7;
+      out.push({ x: cx + dir * r * 0.3 + r * Math.cos(a), y: cy - r + r * Math.sin(a) });
+    }
+    out.push({ x: cx + dir * r * 2.6, y: cy + 2 });
+  } else {
+    out.push({ x: (x0 + x1) / 2 + rand() * 30, y: (ya + yb) / 2 + Math.min(8, gap * 0.12) });
+  }
+  out.push({ x: x1 - dir * turn, y: yb });
+}
 
 /** Catmull-Rom through the points, as cubic Bézier curves: a smooth, string-like line. */
 function curves(p: P[]): Seg[] {

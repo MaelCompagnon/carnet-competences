@@ -113,7 +113,9 @@ const updated = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { dat
       </div>
     </header>
 
-    <main id="contenu" tabindex="-1">
+    <main id="contenu" tabindex="-1" class:list={[id !== 'home' && 'thread-host']} data-thread={id !== 'home' ? '' : undefined}>
+      {/* The thread of the detailed pages (src/scripts/thread.ts); the one-page draws its own. */}
+      {id !== 'home' && <svg class="thread" aria-hidden="true" focusable="false"><path class="thread__path" d="" /></svg>}
       <slot />
       {
         analysis && (
@@ -154,6 +156,15 @@ const updated = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { dat
         window.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
         update();
+      }
+
+      // The thread of the detailed pages: no library, drawn even with "reduce motion"; measured
+      // once the browser is idle, so it never delays reading.
+      const threadHost = document.querySelector<HTMLElement>('[data-thread]');
+      if (threadHost) {
+        const draw = () => import('../scripts/thread').then((m) => m.initThread(threadHost)).catch(() => {});
+        if ('requestIdleCallback' in window) requestIdleCallback(draw, { timeout: 1200 });
+        else setTimeout(draw, 200);
       }
 
       // Smooth scroll and scroll animations are an extra: skipped entirely with "reduce motion",

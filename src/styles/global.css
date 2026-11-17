@@ -760,8 +760,27 @@ a.card:hover {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  /* Behind every block: the thread crosses the page only through the spaces between them. */
+  z-index: -1;
   pointer-events: none;
+}
+
+/* Detailed pages: the thread covers <main>, from the page head to the "back to top" link. */
+.thread-host {
+  position: relative;
+}
+
+/* Without JavaScript: a straight line in the left margin, fully drawn, as on the one-page. */
+.thread-host:not(.has-thread)::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 40px;
+  bottom: 40px;
+  left: max(6px, calc(max(0px, (100% - var(--wrap)) / 2) + var(--gutter) - 28px));
+  width: 2.6px;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 .thread__path {
@@ -1187,7 +1206,8 @@ a.card:hover {
 @media print {
   .thread,
   .toc,
-  .onepage::before {
+  .onepage::before,
+  .thread-host::before {
     display: none !important;
   }
 

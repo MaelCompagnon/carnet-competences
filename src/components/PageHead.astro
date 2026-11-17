@@ -17,7 +17,7 @@ const { num, title, note, kicker } = Astro.props;
 
 <header class="page__head">
   <div class="page__top">
-    <span class="pin" aria-hidden="true">{num}</span>
+    <span class="pin" data-pin aria-hidden="true">{num}</span>
     {kicker && <p class="label">{kicker}</p>}
   </div>
   <h1 set:html={inline(title)} />
