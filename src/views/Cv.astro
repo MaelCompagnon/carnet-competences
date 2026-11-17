@@ -3,7 +3,6 @@ import { Image } from 'astro:assets';
 import portrait from '../../assets/mael-portrait-recadre.png';
 import Base from '../layouts/Base.astro';
 import DocGallery from '../components/DocGallery.astro';
-import Sections from '../components/Sections.astro';
 import { inline, loadPage } from '../lib/content';
 import { cvData } from '../lib/cv';
 import { docsOf } from '../lib/documents';
@@ -63,9 +62,5 @@ const certs = eng.sections[eng.sections.length - 1];
       <h2 id="rapports">{t.docs.reports}</h2>
       <DocGallery lang={lang} docs={docsOf(lang, 'report')} level={3} />
     </section>
-
-    <div class="column">
-      <Sections sections={cv.sections} />
-    </div>
   </article>
 </Base>
