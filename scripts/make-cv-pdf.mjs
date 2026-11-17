@@ -26,10 +26,10 @@ const jobs = [
   ['/en/cv/ats/', 'CV-Mael-Compagnon-EN-ATS.pdf', 'cv-ats-en'],
 ];
 const pdfOptions = { format: 'A4', printBackground: true, preferCSSPageSize: true };
-// The designed French CV is Maël's own file (decision of 17 Nov 2026), kept as is in public/cv/:
-// it is not printed here, only previewed, with its phone number masked (scripts/lib/pdf-raster.mjs).
-// The English designed CV is still printed from /en/cv/print/.
-const PROVIDED = new Set(['CV-Mael-Compagnon-FR.pdf']);
+// The designed CVs are Maël's own files, made in Canva (French, then its English translation;
+// decisions of 17 Nov 2026), kept as is in public/cv/: they are not printed here, only previewed,
+// with the phone number masked (scripts/lib/pdf-raster.mjs).
+const PROVIDED = new Set(['CV-Mael-Compagnon-FR.pdf', 'CV-Mael-Compagnon-EN.pdf']);
 
 await withBuiltSite(async ({ root, base, browser }) => {
   const pdfDir = path.join(root, 'public', 'cv');
