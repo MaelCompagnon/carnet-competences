@@ -5,9 +5,11 @@ import type { Lang } from '../i18n/routes';
 interface Props {
   lang: Lang;
   title: string;
+  /** Page margins of the PDF (the designed CV prints edge to edge). */
+  margin?: string;
 }
 
-const { lang, title } = Astro.props;
+const { lang, title, margin = '10mm 13mm' } = Astro.props;
 ---
 
 <!doctype html>
@@ -17,6 +19,7 @@ const { lang, title } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{title}</title>
+    <style set:html={`@page { size: A4; margin: ${margin}; }`} />
   </head>
   <body>
     <slot />
@@ -25,11 +28,6 @@ const { lang, title } = Astro.props;
 
 <style is:global>
   /* Every rule is scoped to .print, so that these global rules can never restyle the site itself. */
-  @page {
-    size: A4;
-    margin: 10mm 13mm;
-  }
-
   .print * {
     box-sizing: border-box;
   }
