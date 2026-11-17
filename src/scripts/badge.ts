@@ -24,7 +24,6 @@ export function initBadge() {
   if (!root || !card || !pin) return;
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const back = root.querySelector<HTMLElement>('.badge__face--back');
-  const hint = root.querySelector<HTMLElement>('[data-badge-hint]');
   const path = root.querySelector<SVGPathElement>('[data-badge-path]');
 
   // A button only now that it does something.
@@ -34,10 +33,6 @@ export function initBadge() {
   card.setAttribute('aria-pressed', 'false');
   if (back?.id) card.setAttribute('aria-describedby', back.id);
   root.classList.add('is-live');
-  if (hint) {
-    if (still && hint.dataset.still) hint.textContent = hint.dataset.still;
-    hint.hidden = false;
-  }
 
   let flipped = false;
   let suppressClick = false;

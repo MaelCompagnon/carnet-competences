@@ -19,11 +19,10 @@ export const ui = {
     junctionPhotoAlt: "Maël Compagnon à Junction 2026, devant l'affiche « The European Tech Renaissance ».",
     portraitAlt: 'Portrait de Maël Compagnon',
     photos: 'En images',
+    video: { play: 'Lire la vidéo', where: 'YouTube' },
     badge: {
       flip: 'Retourner le badge',
       back: 'Au dos',
-      hint: 'Attrapez le badge et tirez, ou cliquez pour le retourner',
-      hintStill: 'Cliquez sur le badge pour le retourner',
     },
     matrixTitle: 'Matrice compétences × preuves',
     matrixHint:
@@ -88,11 +87,10 @@ export const ui = {
     junctionPhotoAlt: 'Maël Compagnon at Junction 2026, in front of the poster "The European Tech Renaissance".',
     portraitAlt: 'Portrait of Maël Compagnon',
     photos: 'In pictures',
+    video: { play: 'Play the video', where: 'YouTube' },
     badge: {
       flip: 'Flip the badge',
       back: 'On the back',
-      hint: 'Grab the badge and pull, or click to flip it',
-      hintStill: 'Click the badge to flip it',
     },
     matrixTitle: 'Skills × evidence matrix',
     matrixHint: 'Select a skill to see its evidence, or an experience to see the skills it developed.',

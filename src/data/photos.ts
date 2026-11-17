@@ -7,6 +7,10 @@ import salmarLigne5 from '../../assets/photos/salmar-ligne-5.jpg';
 import salmarDeepTracker from '../../assets/photos/salmar-deep-tracker.jpg';
 import ageoMotDePasse from '../../assets/photos/ageo-mot-de-passe-oublie.jpg';
 import ageoMaquette from '../../assets/photos/ageo-maquette-reinitialisation.jpg';
+import junctionEquipe from '../../assets/photos/junction-equipe.jpg';
+import junctionSalle from '../../assets/photos/junction-salle.jpg';
+import junctionLicorne from '../../assets/photos/junction-licorne.jpg';
+export { default as junctionPoster } from '../../assets/photos/junction-public.jpg';
 
 // Pictures taken from Maël's own documents (LEP, internship reports), list validated by Maël
 // on 17 Nov 2026. Never added here: faces of other people, names, signatures, internal company
@@ -19,7 +23,40 @@ export interface Photo {
   caption: Record<Lang, string>;
 }
 
-export const photos: Record<'salmar' | 'ageo' | 'engagements', Photo[]> = {
+/** Junction 2026: the video of our presentation (YouTube), shown by VideoEmbed.astro. */
+export const junctionVideo = {
+  id: 'mIXfgXq1Bpw',
+  title: { fr: 'Présentation de TimeProof à Junction 2026', en: 'TimeProof presentation at Junction 2026' },
+  caption: { fr: 'Notre présentation de TimeProof à Junction 2026', en: 'Our presentation of TimeProof at Junction 2026' },
+};
+
+export const photos: Record<'salmar' | 'ageo' | 'engagements' | 'junction', Photo[]> = {
+  junction: [
+    {
+      src: junctionEquipe,
+      alt: {
+        fr: "Maël Compagnon et ses trois coéquipiers devant l'affiche « European Tech Renaissance » de Junction.",
+        en: 'Maël Compagnon and his three teammates in front of the Junction "European Tech Renaissance" poster.',
+      },
+      caption: { fr: "L'équipe à Junction 2026", en: 'The team at Junction 2026' },
+    },
+    {
+      src: junctionSalle,
+      alt: {
+        fr: 'La grande salle du hackathon, éclairée de violet : des participants codent sur leurs ordinateurs.',
+        en: 'The main hackathon hall, lit in purple: participants coding on their laptops.',
+      },
+      caption: { fr: 'La salle, pendant les 48 heures', en: 'The hall, during the 48 hours' },
+    },
+    {
+      src: junctionLicorne,
+      alt: {
+        fr: "Une table de hackathon : canettes, bouteilles, autocollants et une licorne en peluche.",
+        en: 'A hackathon table: cans, bottles, stickers and a stuffed unicorn.',
+      },
+      caption: { fr: 'Sur une table du hackathon', en: 'On a hackathon table' },
+    },
+  ],
   salmar: [
     {
       src: salmarLigne5,

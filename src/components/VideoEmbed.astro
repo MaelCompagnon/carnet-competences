@@ -1,0 +1,50 @@
+---
+// A YouTube video, without loading YouTube until the visitor asks for it: a local poster and a
+// play button. A click swaps them for the player (youtube-nocookie.com). Without JavaScript the
+// poster is a plain link to the video on YouTube. No request to Google before the click.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  id: string;
+  title: string;
+  poster: ImageMetadata;
+  caption?: string;
+}
+
+const { lang, id, title, poster, caption } = Astro.props;
+const t = ui[lang];
+---
+
+<figure class="video" data-video={id} data-video-title={title}>
+  <a class="video__frame" href={`https://www.youtube.com/watch?v=${id}`} data-video-play>
+    <Image src={poster} alt="" widths={[480, 900, 1400]} sizes="(max-width: 900px) 92vw, 820px" />
+    <span class="video__play" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="30" height="30" focusable="false"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"></path></svg>
+    </span>
+    <span class="video__label">{t.video.play}<span class="sr-only"> : {title} ({t.video.where})</span></span>
+  </a>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-video]').forEach((box) => {
+    const link = box.querySelector<HTMLAnchorElement>('[data-video-play]');
+    if (!link) return;
+    link.addEventListener('click', (e) => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      const frame = document.createElement('iframe');
+      frame.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(box.dataset.video ?? '')}?autoplay=1&rel=0`;
+      frame.title = box.dataset.videoTitle ?? '';
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      frame.allowFullscreen = true;
+      frame.className = 'video__frame video__frame--live';
+      link.replaceWith(frame);
+      frame.focus();
+    });
+  });
+</script>
