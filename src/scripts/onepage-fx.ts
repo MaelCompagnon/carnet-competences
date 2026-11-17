@@ -22,12 +22,22 @@ export function initOnePage(lenis?: Lenis) {
   if (lenis) lenis.on('scroll', ScrollTrigger.update);
   const sliding = sheetsSideways(host);
   const vh = window.innerHeight;
+  // All measures first, in one pass, before any start state is written: reading a position
+  // right after a write forces the browser to lay the whole page out again, once per element
+  // (it cost more than a second of blocked main thread on a phone).
+  const animated = [...host.querySelectorAll<HTMLElement>('[data-postit],[data-polaroid],[data-card],[data-sheet],[data-write],[data-hl],[data-count]')];
+  const topOf = (el: HTMLElement) => el.getBoundingClientRect().top;
+  const tops = new Map(animated.map((el) => [el, topOf(el)]));
+  // Tilts are inline (style="--r:…") on the post-its: read them without a style recalculation.
+  const tilts = new Map(
+    animated.map((el) => [el, parseFloat(el.style.getPropertyValue('--r')) || (el.matches('[data-polaroid]') ? parseFloat(getComputedStyle(el).getPropertyValue('--r')) || 0 : 0)]),
+  );
   // Only elements entirely below the screen get a start state; anything that shows, even a
   // few pixels at the bottom edge, plays at once (a block must never sit there invisible).
-  const below = (el: Element) => el.getBoundingClientRect().top >= vh;
+  const below = (el: Element) => (tops.get(el as HTMLElement) ?? 0) >= vh;
   const pending: Item[] = [];
   const add = (el: HTMLElement, play: Item['play']) => pending.push({ el, play });
-  const tilt = (el: HTMLElement) => parseFloat(getComputedStyle(el).getPropertyValue('--r')) || 0;
+  const tilt = (el: HTMLElement) => tilts.get(el) ?? 0;
 
   // Post-its come in from the side and land with their own small tilt.
   host.querySelectorAll<HTMLElement>('[data-postit]').forEach((el, i) => {
@@ -114,13 +124,15 @@ export function initOnePage(lenis?: Lenis) {
   const check = () => {
     queued = false;
     const line = window.innerHeight;
-    const due = pending.filter((it) => it.el.getBoundingClientRect().top < line);
+    // Read every box first, then play: no layout forced between two writes.
+    const due = pending
+      .map((it) => ({ it, box: it.el.getBoundingClientRect() }))
+      .filter((d) => d.box.top < line);
     if (due.length === 0) return;
     let k = 0;
-    for (const it of due) {
+    for (const { it, box } of due) {
       pending.splice(pending.indexOf(it), 1);
-      const skipped = it.el.getBoundingClientRect().bottom < 0;
-      if (skipped) it.play(true);
+      if (box.bottom < 0) it.play(true);
       else gsap.delayedCall(k++ * 0.08, () => it.play(false));
     }
     if (pending.length === 0) window.removeEventListener('scroll', schedule);
@@ -132,7 +144,8 @@ export function initOnePage(lenis?: Lenis) {
   };
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule);
-  check();
+  // No first check here: every pending element was measured below the screen a moment ago,
+  // and measuring again right after the start states were written would force a layout.
 
   // A printed page must be complete, with the real figures.
   window.addEventListener('beforeprint', () => {
