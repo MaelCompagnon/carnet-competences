@@ -47,9 +47,11 @@ export function initThread(host: HTMLElement) {
     const h = host.offsetHeight;
     svg!.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
+    // Layout positions, not the screen ones: an entrance animation may still be moving a pin.
+    const at0 = layoutOrigin(host);
     const pts = pins.map((p) => {
-      const r = p.getBoundingClientRect();
-      return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2 };
+      const o = layoutOrigin(p);
+      return { x: o.x - at0.x + p.offsetWidth / 2, y: o.y - at0.y + p.offsetHeight / 2 };
     });
     pinY = pts.map((p) => p.y);
     const narrow = window.innerWidth < 1024;
@@ -65,6 +67,8 @@ export function initThread(host: HTMLElement) {
     const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280) * 2 - 1;
     const out = narrow ? marginThread(pts, rows, h, rand) : windingThread(pts, rows, h, maxRight(host, box, w), rand);
     if (out.length < 2) return;
+    // Never outside the page (the margin is narrow on a laptop or a phone).
+    for (const p of out) p.x = Math.min(w - 6, Math.max(6, p.x));
 
     const segs = curves(out);
     path!.setAttribute('d', toPath(segs));
@@ -158,17 +162,40 @@ type Row = { top: number; bottom: number; left: number; right: number; pin?: P }
 
 // Blocks the thread goes around. Inside a stop element (a paragraph, a card…) it never looks further.
 const SKIP = '.thread, .toc, .sr-only, .skip, script, style, template, dialog, [hidden]';
+const LOOSE = '.pin-spacer, [data-sheets].is-sideways';
 const STOP =
-  'p, h1, h2, h3, h4, h5, h6, ul, ol, dl, table, figure, img, picture, svg, a, button, blockquote, pre, form, details, .card, .postit, .polaroid, .badge, .btn, .pin-spacer, [data-thread-solid]';
+  'p, h1, h2, h3, h4, h5, h6, ul, ol, dl, table, figure, img, picture, svg, a, button, blockquote, pre, form, details, .card, .postit, .polaroid, .badge, .btn, .pin-spacer, [data-sheets].is-sideways, [data-thread-solid]';
+
+/** Position of an element in the page layout, transforms left out. */
+function layoutOrigin(el: HTMLElement): P {
+  let x = 0;
+  let y = 0;
+  for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) {
+    x += e.offsetLeft;
+    y += e.offsetTop;
+  }
+  return { x, y };
+}
 
 /**
  * The page as a stack of rows: the blocks of the layout, merged when they sit side by side.
  * The spaces between two rows are where the thread may cross the page.
- * One read pass (getBoundingClientRect), no write.
+ * One read pass, no write. Positions come from the layout (offsetLeft / offsetTop), not from
+ * getBoundingClientRect: the entrance animations start with blocks moved aside or below, and
+ * the thread must follow where they land, not where they start.
  */
 function layoutRows(host: HTMLElement, box: DOMRect): Row[] {
   const blocks: Row[] = [];
+  const origin = layoutOrigin;
+  const base = origin(host);
   const rectOf = (el: Element): Row | null => {
+    if (el instanceof HTMLElement) {
+      if (el.offsetWidth < 1 || el.offsetHeight < 1) return null;
+      const o = origin(el);
+      const left = o.x - base.x;
+      const top = o.y - base.y;
+      return { top, bottom: top + el.offsetHeight, left, right: left + el.offsetWidth };
+    }
     const r = el.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) return null;
     return { top: r.top - box.top, bottom: r.bottom - box.top, left: r.left - box.left, right: r.right - box.left };
@@ -183,7 +210,10 @@ function layoutRows(host: HTMLElement, box: DOMRect): Row[] {
     const own = rectOf(el);
     if (!own) return;
     if (depth > 0 && el.matches(STOP)) {
-      blocks.push(own);
+      // The pinned experience sheets span the whole window (and slide sideways): only their
+      // height counts, not their width.
+      if (el.matches(LOOSE)) blocks.push({ ...own, left: Infinity, right: -Infinity });
+      else blocks.push(own);
       return;
     }
     const kids: { el: Element; r: Row }[] = [];
@@ -214,6 +244,14 @@ function layoutRows(host: HTMLElement, box: DOMRect): Row[] {
       last.left = Math.min(last.left, b.left);
       last.right = Math.max(last.right, b.right);
     } else rows.push({ ...b });
+  }
+  // A row made of loose blocks only takes the width of the text around it.
+  const sized = rows.filter((r) => Number.isFinite(r.left));
+  const left = sized.length ? Math.min(...sized.map((r) => r.left)) : 0;
+  const right = sized.length ? Math.max(...sized.map((r) => r.right)) : box.width;
+  for (const r of rows) {
+    if (!Number.isFinite(r.left)) r.left = left;
+    if (!Number.isFinite(r.right)) r.right = right;
   }
   return rows;
 }
@@ -261,7 +299,8 @@ function windingThread(pins: P[], rows: Row[], h: number, maxR: number, rand: ()
   const laneL = (r: Row) => Math.max(10, Math.min(r.left, contentLeft + 40) - LANE);
   // On the right it hugs the wide blocks, and keeps a calm line beside the narrow ones.
   const laneR = (r: Row) => Math.max(r.right, contentRight - 80) + LANE;
-  const fitsRight = (r: Row) => !r.pin && laneR(r) <= maxR;
+  // Room for the swing of the thread (about 20 px) as well.
+  const fitsRight = (r: Row) => !r.pin && laneR(r) + 22 <= maxR;
   for (const r of rows) r.pin = pins.find((p) => p.y >= r.top - 2 && p.y <= r.bottom + 2);
   // A crossing after about three quarters of a screen on the same side.
   const crossRun = Math.max(420, window.innerHeight * 0.75);
