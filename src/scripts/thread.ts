@@ -3,18 +3,22 @@
 // with "reduce motion", where GSAP and Lenis are never loaded, and the detailed pages have no
 // GSAP at all (Lighthouse). Without JavaScript, a straight CSS line stands in for it.
 //
-// The line stays soft: between two pins it glides out into the left margin with a long, smooth
-// curve, runs down with a slow, ample wave, and glides back to the next pin. No random wobble,
-// no hook: one smooth function, sampled densely. On a phone it runs straight down the margin.
+// The line is the first thread of the one-page: between two pins it swings into the left
+// margin (64 px at most) and wobbles a little, always the same way. Now and then, where the
+// margin is wide enough, the string makes a small round loop. On a detailed page it hooks
+// onto the left side of its pin, so that it never runs across the title below. On a phone it
+// runs down the margin, through the pins of the one-page.
 //
 // With motion allowed, the thread is drawn as the reader scrolls, and each pin bounces then
-// fills when the tip of the thread reaches it. The path is computed from the real position of
-// the pins, and computed again whenever the page changes size (fonts, images, resize).
+// fills when the tip of the thread reaches it. The path is computed from the layout position
+// of the pins, and computed again whenever the page changes size (fonts, images, resize).
 
 const TIP = 0.62; // the tip of the thread sits at 62 % of the screen height
-const STEP = 60; // one point every 60 px: the curve is a smooth function, sampled finely
-const GLIDE = 360; // height over which the thread leaves a pin for the margin, and comes back
-const WAVE = 1500; // period of the slow wave along the margin, in px
+const STEP = 280; // one wobble point every 280 px between two pins
+const SWING = 64; // how far the thread swings into the margin, at most
+const LOOP_X = 12; // a loop of string: half its width…
+const LOOP_Y = 17; // …its turn along the thread (larger: the loop comes out round, not flat)…
+const LOOP_C = 4.2; // …and how far the string runs down while it turns
 
 export function initThread(host: HTMLElement) {
   const svg = host.querySelector<SVGSVGElement>('svg.thread');
@@ -62,11 +66,7 @@ export function initThread(host: HTMLElement) {
     const narrow = window.innerWidth < 1024;
     // The one-page ends a little below its last pin; a detailed page, at the foot of its content.
     const end = pts.length > 1 ? Math.min(h - 40, pts[pts.length - 1].y + 260) : h - 48;
-    // The thread hooks onto the left side of each pin, so that it never runs across a title.
-    // On a phone, the pins of the one-page stand in the margin: there it goes through them.
-    const column = pts.length > 1 && pts.every((p) => Math.abs(p.x - pts[0].x) < 4);
-    const hooks = narrow && column ? pts : pts.map((p, i) => ({ x: p.x - pins[i].offsetWidth / 2, y: p.y }));
-    const out = softThread(hooks, end, narrow && column);
+    const out = withLoops(looseThread(pts, pins, end, narrow), pts, end);
     if (out.length < 2) return;
     // Never outside the page (the margin is narrow on a laptop or a phone).
     for (const p of out) p.x = Math.min(w - 6, Math.max(6, p.x));
@@ -171,46 +171,106 @@ function layoutOrigin(el: HTMLElement): P {
   return { x, y };
 }
 
-/** Eases from 0 to 1 and back with no corner (a smootherstep at each end). */
-function ease(t: number): number {
-  const u = Math.min(1, Math.max(0, t));
-  return u * u * u * (u * (u * 6 - 15) + 10);
+/**
+ * Pin to pin, then to the loose end. Between two pins the thread swings into the left margin
+ * with a sine arch and wobbles a little; the wobble comes from a fixed sequence, so the thread
+ * keeps its shape on every visit. A single pin (a detailed page): the thread leaves it by its
+ * left side and runs down the margin to the foot of the page.
+ */
+function looseThread(pts: P[], pins: HTMLElement[], end: number, narrow: boolean): P[] {
+  let seed = 7;
+  const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280) * 2 - 1;
+  const wob = narrow ? 2.5 : 10;
+  if (pts.length === 1) {
+    const c = pts[0];
+    // Hooked on the left side of the pin (the pin hides the start), out into the margin.
+    const hook = { x: c.x - pins[0].offsetWidth / 2 - 2, y: c.y + 8 };
+    const swing = Math.min(SWING, Math.max(0, hook.x - (narrow ? 8 : 18)));
+    const out: P[] = [c, hook];
+    const n = Math.max(1, Math.round((end - c.y) / STEP));
+    for (let k = 0; k < n; k++) {
+      const y = c.y + STEP / 2 + ((end - c.y - STEP / 2) * k) / n;
+      out.push({ x: hook.x - swing + rand() * wob, y });
+    }
+    out.push({ x: hook.x - swing, y: end });
+    return out;
+  }
+  const out: P[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i];
+    out.push(a);
+    const b = pts[i + 1] ?? { x: a.x, y: end };
+    const swing = narrow ? 0 : Math.min(SWING, Math.max(0, a.x - 18));
+    const n = Math.max(1, Math.round((b.y - a.y) / STEP));
+    for (let k = 1; k < n; k++) {
+      const f = k / n;
+      // Out into the margin and back: a sine arch, plus the wobble.
+      const arch = Math.sin(f * Math.PI);
+      out.push({ x: a.x + (b.x - a.x) * f - swing * arch + rand() * wob * arch, y: a.y + (b.y - a.y) * f });
+    }
+    if (!pts[i + 1]) out.push(b); // the loose end, below the last pin
+  }
+  return out;
 }
 
 /**
- * Pin to pin, then to the loose end. Between two pins the thread glides out to a lane in the
- * margin, follows it with a slow wave, and glides back: every turn is a long, soft curve.
+ * A few round loops, where the string runs alone in a wide margin: in every other long stretch
+ * between two pins of the one-page (three at most), once down a long detailed page. The thread
+ * is sampled densely, then each loop replaces a short piece of it. A loop is a prolate cycloid
+ * along the thread: it leaves and joins the thread with the same tangent, so it never breaks.
  */
-function softThread(pins: P[], end: number, straight: boolean): P[] {
-  const first = pins[0];
-  // How far into the margin it goes: up to 60 px, never closer than 8 px to the edge.
-  const depth = straight ? 0 : Math.min(60, Math.max(0, first.x - 8));
-  const wave = Math.min(16, depth * 0.28);
+function withLoops(sparse: P[], pins: P[], end: number): P[] {
+  // Dense samples of the smooth thread, about every 35 px.
+  const dense: P[] = [sparse[0]];
+  for (const [a, b, c, d] of curves(sparse)) {
+    for (let k = 1; k <= 8; k++) dense.push(bezier(a, b, c, d, k / 8));
+  }
 
-  const stops: P[] = [...pins, { x: first.x, y: end }];
-  const out: P[] = [first];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const a = stops[i];
-    const b = stops[i + 1];
-    const span = b.y - a.y;
-    if (span <= 0) continue;
-    const loose = i === stops.length - 2;
-    const glide = Math.min(GLIDE, span / 2);
-    // It leaves a pin a little faster than it reaches the next one: the title beside the pin stays clear.
-    const leave = Math.min(GLIDE / 2, span / 2);
-    const n = Math.max(4, Math.ceil(span / STEP));
-    for (let k = 1; k <= n; k++) {
-      const y = a.y + (span * k) / n;
-      const d = y - a.y;
-      // Out from the pin, and back to the next one (the loose end stays out in the margin).
-      const out1 = ease(d / leave);
-      const back = loose ? 1 : ease((span - d) / glide);
-      const away = out1 * back;
-      const x = a.x + (b.x - a.x) * ease(d / span) - depth * away + wave * away * Math.sin((y / WAVE) * Math.PI * 2);
-      out.push({ x, y });
+  const spots: number[] = [];
+  if (pins.length > 1) {
+    let long = 0;
+    for (let i = 0; i < pins.length - 1 && spots.length < 3; i++) {
+      const span = pins[i + 1].y - pins[i].y;
+      if (span < 1100) continue;
+      // The middle of the stretch, where the arch is widest.
+      if (long++ % 2 === 0) spots.push(pins[i].y + span * 0.5);
     }
+  } else if (end - pins[0].y > 1800) {
+    spots.push(pins[0].y + (end - pins[0].y) * 0.42);
+  }
+
+  const run = 2 * Math.PI * LOOP_C; // height the thread runs down while it loops
+  let out = dense;
+  for (const y0 of spots) {
+    const i = out.findIndex((p) => p.y >= y0);
+    if (i < 1) continue;
+    const xAt = (y: number) => {
+      const j = Math.max(1, out.findIndex((p) => p.y >= y));
+      const p = out[j - 1];
+      const q = out[j] ?? p;
+      return q.y === p.y ? p.x : p.x + ((q.x - p.x) * (y - p.y)) / (q.y - p.y);
+    };
+    // Only where the whole loop fits in the margin, never against the edge of the screen.
+    if (xAt(y0) - 2 * LOOP_X < 14) continue;
+    const loop: P[] = [];
+    for (let k = 0; k <= 28; k++) {
+      const t = -Math.PI + (2 * Math.PI * k) / 28;
+      const u = y0 + LOOP_C * (t + Math.PI) - LOOP_Y * Math.sin(t);
+      loop.push({ x: xAt(u) - LOOP_X * (1 + Math.cos(t)), y: u });
+    }
+    const after = out.findIndex((p) => p.y > y0 + run);
+    if (after < 0) continue;
+    out = [...out.slice(0, i), ...loop, ...out.slice(after)];
   }
   return out;
+}
+
+function bezier(a: P, b: P, c: P, d: P, t: number): P {
+  const u = 1 - t;
+  return {
+    x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+    y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+  };
 }
 
 /** Catmull-Rom through the points, as cubic Bézier curves: a smooth, string-like line. */
@@ -246,10 +306,7 @@ function flatten(segs: Seg[]): { lens: number[]; ys: number[] } {
   let acc = 0;
   for (const [a, b, c, d] of segs) {
     for (let k = 1; k <= 16; k++) {
-      const t = k / 16;
-      const u = 1 - t;
-      const x = u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x;
-      const y = u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y;
+      const { x, y } = bezier(a, b, c, d, k / 16);
       acc += Math.hypot(x - prev.x, y - prev.y);
       lens.push(acc);
       // Kept increasing, so the search by height stays valid where the curve wobbles back up.
