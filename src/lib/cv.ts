@@ -15,7 +15,8 @@ function item(raw: string): CvItem {
   // The phone number is not in the repository: the PDF script fills this slot from .env.
   if (raw.includes('{{telephone}}')) return { kind: 'phone', html: '', text: '' };
   if (/^[^\s@]+@[^\s@]+$/.test(text)) return { kind: 'email', html: text, text, href: `mailto:${text}` };
-  if (/^[\w.-]+\.[a-z]{2,}\/\S*$/i.test(text)) return { kind: 'link', html: text, text, href: `https://${text}` };
+  // A bare domain ("portfolio-mael-compagnon.netlify.app") is a link too.
+  if (/^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(text)) return { kind: 'link', html: text, text, href: `https://${text}` };
   return { kind: 'text', html: inline(raw), text };
 }
 
