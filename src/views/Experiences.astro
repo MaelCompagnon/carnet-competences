@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import ExperienceSheet from '../components/ExperienceSheet.astro';
+import PageHead from '../components/PageHead.astro';
+import { inline } from '../lib/content';
+import { experienceSheets } from '../lib/experiences';
+import { onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// This index has no content file of its own: its title and lead come from the home chapters,
+// and each experience is the same sheet as on the one-page.
+const chapter = siteData(lang).chapters.find((c) => c.id === 'experiences')!;
+const op = onePage(lang);
+const sheets = experienceSheets(lang);
+---
+
+<Base lang={lang} id="experiences" title={chapter.title} description={chapter.desc}>
+  <div class="page wrap">
+    <PageHead num="03" title={chapter.title} note={op.chapters[2].note}>
+      <p class="page__lead" set:html={inline(chapter.desc)} />
+    </PageHead>
+    <div class="sheets__track sheets--page">
+      {sheets.map((s, i) => <ExperienceSheet lang={lang} sheet={s} index={i} level={2} flow={op.diagram} flowPending={op.diagramPending} />)}
+    </div>
+  </div>
+</Base>

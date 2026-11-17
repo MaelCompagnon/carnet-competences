@@ -1,0 +1,25 @@
+---
+// Hand-drawn arrow. None of the site fonts has "←" or "→" (Grenze and Caveat lack "↓" too),
+// so arrows are drawn: a fallback system glyph would break the handwritten look.
+// Decorative: the text next to it carries the meaning.
+interface Props {
+  dir?: 'left' | 'right' | 'down';
+  class?: string;
+}
+
+const { dir = 'left', class: cls } = Astro.props;
+const rotate = { left: 0, right: 180, down: 270 }[dir];
+---
+
+<svg
+  class:list={['arrow', cls]}
+  aria-hidden="true"
+  focusable="false"
+  viewBox="0 0 32 16"
+  width="1.6em"
+  height="0.8em"
+  style={rotate ? `transform: rotate(${rotate}deg)` : undefined}
+>
+  <path d="M30 9.2c-6.5-1.6-15.4-1.9-26.6-.6" />
+  <path d="M9.6 2.6 3.2 8.7l6.9 4.9" />
+</svg>

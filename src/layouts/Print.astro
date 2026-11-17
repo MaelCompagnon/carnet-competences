@@ -1,0 +1,76 @@
+---
+// Bare page used only to print the CV PDFs (scripts/make-cv-pdf.mjs). Not indexed, not linked.
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+  title: string;
+}
+
+const { lang, title } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang} class="print">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  /* Every rule is scoped to .print, so that these global rules can never restyle the site itself. */
+  @page {
+    size: A4;
+    margin: 10mm 13mm;
+  }
+
+  .print * {
+    box-sizing: border-box;
+  }
+
+  .print [hidden] {
+    display: none !important;
+  }
+
+  html.print {
+    background: #fff;
+    color-scheme: light;
+  }
+
+  .print body {
+    margin: 0 auto;
+    padding: 24px;
+    max-width: 210mm;
+    background: #fff;
+    color: #14161a;
+  }
+
+  @media print {
+    .print body {
+      padding: 0;
+      max-width: none;
+    }
+  }
+
+  .print :is(h1, h2, h3, p, ul, ol) {
+    margin: 0;
+  }
+
+  .print a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .print .marker {
+    background: #ffe27a;
+    color: #17140a;
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+</style>

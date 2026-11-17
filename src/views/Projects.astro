@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import ProjectGrid from '../components/ProjectGrid.astro';
+import { inline, loadPage } from '../lib/content';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { title } = loadPage(lang, '08-projets');
+const chapter = siteData(lang).chapters.find((c) => c.id === 'projects')!;
+---
+
+<Base lang={lang} id="projects" title={title} description={chapter.desc}>
+  <div class="page wrap">
+    <PageHead num="07" title={title}>
+      <p class="page__lead" set:html={inline(chapter.desc)} />
+    </PageHead>
+    <ProjectGrid lang={lang} level={2} />
+  </div>
+</Base>

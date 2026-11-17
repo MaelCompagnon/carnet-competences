@@ -1,0 +1,155 @@
+---
+// Skills × evidence matrix (SPEC §5). The table is complete in the HTML;
+// the script only adds highlighting, so it works with mouse, keyboard and touch,
+// and still reads correctly without JavaScript.
+import { sources } from '../data/sources';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+export interface MatrixSkill {
+  name: string;
+  level: string;
+  proofs: string[];
+  srcs: string[];
+}
+
+interface Props {
+  lang: Lang;
+  groups: { title: string; skills: MatrixSkill[] }[];
+}
+
+const { lang, groups } = Astro.props;
+const t = ui[lang];
+const labels = t.sources as Record<string, string>;
+---
+
+<div class="matrix" data-matrix data-l-proofs={t.matrixProofs} data-l-skills={t.matrixSkillsOf}>
+  <p class="matrix__hint">{t.matrixHint}</p>
+  <div class="matrix__layout">
+    <div class="matrix__scroll" data-lenis-prevent-horizontal role="region" aria-label={t.matrixRegion} tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t.matrixSkill}</th>
+            {
+              sources.map((s) => (
+                <th scope="col" data-col data-src={s.id}>
+                  <button type="button" aria-pressed="false" data-src-btn={s.id} data-label={labels[s.id]}>
+                    <span>{labels[s.id]}</span>
+                  </button>
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        {
+          groups.map((g) => (
+            <tbody>
+              <tr class="matrix__group">
+                <th colspan={sources.length + 1} scope="colgroup">
+                  {g.title}
+                </th>
+              </tr>
+              {g.skills.map((sk) => (
+                <tr data-skill data-srcs={sk.srcs.join(' ')} data-level={sk.level} data-proofs={JSON.stringify(sk.proofs)}>
+                  <th scope="row">
+                    <button type="button" aria-pressed="false" data-skill-btn>
+                      {sk.name}
+                    </button>
+                  </th>
+                  {sources.map((s) =>
+                    sk.srcs.includes(s.id) ? (
+                      <td class="on" data-src={s.id}>
+                        <span class="dot" aria-hidden="true" />
+                        <span class="sr-only">{t.matrixLinked}</span>
+                      </td>
+                    ) : (
+                      <td data-src={s.id} />
+                    ),
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          ))
+        }
+      </table>
+    </div>
+    <div class="matrix__detail" data-detail aria-live="polite" hidden></div>
+  </div>
+</div>
+
+<script>
+  type Sel = { kind: 'skill'; row: HTMLElement } | { kind: 'src'; id: string; label: string } | null;
+
+  document.querySelectorAll<HTMLElement>('[data-matrix]').forEach((root) => {
+    const detail = root.querySelector<HTMLElement>('[data-detail]')!;
+    const rows = [...root.querySelectorAll<HTMLElement>('tr[data-skill]')];
+    const cols = [...root.querySelectorAll<HTMLElement>('th[data-col]')];
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('button')];
+    let locked: Sel = null;
+
+    const srcsOf = (row: HTMLElement) => (row.dataset.srcs ?? '').split(' ').filter(Boolean);
+    const nameOf = (row: HTMLElement) => row.querySelector('button')!.textContent!.trim();
+
+    function el(tag: string, text: string, cls?: string) {
+      const n = document.createElement(tag);
+      n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    }
+
+    function list(items: string[]) {
+      const ul = document.createElement('ul');
+      items.forEach((i) => ul.append(el('li', i)));
+      return ul;
+    }
+
+    function show(sel: Sel) {
+      root.classList.toggle('has-sel', !!sel);
+      rows.forEach((r) => {
+        const on = !!sel && (sel.kind === 'skill' ? r === sel.row : srcsOf(r).includes(sel.id));
+        r.classList.toggle('is-on', on);
+        r.querySelectorAll<HTMLElement>('td').forEach((td) => {
+          td.classList.toggle('is-on', !!sel && sel.kind === 'src' && td.dataset.src === sel.id && td.classList.contains('on'));
+        });
+      });
+      cols.forEach((c) => {
+        const on = !!sel && (sel.kind === 'src' ? c.dataset.src === sel.id : srcsOf(sel.row).includes(c.dataset.src!));
+        c.classList.toggle('is-on', on);
+      });
+
+      detail.replaceChildren();
+      detail.hidden = !sel;
+      if (!sel) return;
+      if (sel.kind === 'skill') {
+        detail.append(el('h3', nameOf(sel.row)));
+        if (sel.row.dataset.level) detail.append(el('p', sel.row.dataset.level));
+        detail.append(el('span', root.dataset.lProofs!, 'mono'), list(JSON.parse(sel.row.dataset.proofs!)));
+      } else {
+        const names = rows.filter((r) => srcsOf(r).includes(sel.id)).map(nameOf);
+        detail.append(el('h3', sel.label), el('span', root.dataset.lSkills!, 'mono'), list(names));
+      }
+    }
+
+    function selOf(btn: HTMLButtonElement): Sel {
+      if (btn.dataset.srcBtn) return { kind: 'src', id: btn.dataset.srcBtn, label: btn.dataset.label! };
+      return { kind: 'skill', row: btn.closest<HTMLElement>('tr')! };
+    }
+
+    buttons.forEach((btn) => {
+      // Click, Enter, Space or tap: keep the selection. Clicking again releases it.
+      btn.addEventListener('click', () => {
+        const wasOn = btn.getAttribute('aria-pressed') === 'true';
+        buttons.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+        locked = wasOn ? null : selOf(btn);
+        if (!wasOn) btn.setAttribute('aria-pressed', 'true');
+        show(locked);
+      });
+      // Mouse hover and keyboard focus: preview only.
+      btn.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && show(selOf(btn)));
+      btn.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && show(locked));
+      btn.addEventListener('focus', () => btn.matches(':focus-visible') && show(selOf(btn)));
+      btn.addEventListener('blur', () => show(locked));
+    });
+  });
+</script>

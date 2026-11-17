@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import DocGallery from '../components/DocGallery.astro';
+import PageHead from '../components/PageHead.astro';
+import Sections from '../components/Sections.astro';
+import { inline, loadPage, render, withoutTables } from '../lib/content';
+import { docsOf } from '../lib/documents';
+import { onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { title, sections } = loadPage(lang, '07-engagements');
+const chapter = siteData(lang).chapters.find((c) => c.id === 'engagements')!;
+const op = onePage(lang);
+// The last section lists the certificates: they are shown as documents, not as plain links.
+const certs = sections[sections.length - 1];
+const certsIntro = withoutTables(certs).filter((x) => x.type !== 'list');
+---
+
+<Base lang={lang} id="engagements" title={title} description={chapter.desc} analysis>
+  <article class="page wrap">
+    <PageHead num="06" title={title} note={op.chapters[5].note} />
+    <div class="column">
+      <Sections sections={sections.slice(0, -1)} />
+    </div>
+    <section class="section" aria-labelledby={certs.id}>
+      <h2 id={certs.id} set:html={inline(certs.title)} />
+      {certsIntro.length > 0 && <div class="prose column" set:html={render(certsIntro)} />}
+      <DocGallery lang={lang} docs={docsOf(lang, 'engagement')} level={3} />
+    </section>
+  </article>
+</Base>

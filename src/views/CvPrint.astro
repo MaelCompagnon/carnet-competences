@@ -1,0 +1,233 @@
+---
+// Designed CV, printed to PDF, in the "board" direction of the site: Grenze titles, mono
+// labels, a highlighter band. White page and dark ink: it must still read once printed or
+// photocopied in black and white. One A4 page.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource/grenze/latin-700.css';
+import '@fontsource/grenze/latin-ext-700.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource/ibm-plex-mono/latin-ext-500.css';
+import '@fontsource/ibm-plex-mono/latin-600.css';
+import Print from '../layouts/Print.astro';
+import { at, inline, render } from '../lib/content';
+import { cvData } from '../lib/cv';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const cv = cvData(lang);
+// Sections, in order: profile, education, experience, volunteering, skills, interests.
+const s = (i: number) => at(cv.sections, i, cv.doc.file);
+const main = [s(0), s(2), s(3)];
+const side = [s(1), s(4), s(5)];
+---
+
+<Print lang={lang} title={`CV · ${cv.name}`}>
+  <div class="cvp">
+    <header>
+      <p class="cvp__tag">CV</p>
+      <h1>{cv.name}</h1>
+      <p class="cvp__title" set:html={inline(cv.title)} />
+      <p class="cvp__goal" set:html={inline(cv.goal)} />
+      <ul class="cvp__contact">
+        {
+          [...cv.contacts, ...cv.links].map((c) =>
+            c.kind === 'phone' ? <li data-cv-phone hidden /> : <li>{c.href ? <a href={c.href}>{c.text}</a> : <span set:html={c.html} />}</li>,
+          )
+        }
+      </ul>
+    </header>
+    <div class="cvp__cols">
+      <div>
+        {
+          main.map((sec) => (
+            <section>
+              <h2 set:html={inline(sec.title)} />
+              <div class="cvp__body" set:html={render(sec.tokens)} />
+            </section>
+          ))
+        }
+      </div>
+      <aside>
+        {
+          side.map((sec) => (
+            <section>
+              <h2 set:html={inline(sec.title)} />
+              <div class="cvp__body" set:html={render(sec.tokens)} />
+            </section>
+          ))
+        }
+      </aside>
+    </div>
+  </div>
+</Print>
+
+<style is:global>
+  /* Scoped to .cvp: this page shares nothing with the site's stylesheet. */
+  .cvp {
+    --ink: #1b1a1f;
+    --ink-2: #3f3c3a;
+    --line: #cfc9bf;
+    --accent: #8a3858;
+    --mustard: #e8c57a;
+    font-family: 'Inter Variable', Inter, Arial, sans-serif;
+    font-size: 8.8pt;
+    line-height: 1.38;
+    color: var(--ink);
+  }
+
+  .cvp header {
+    position: relative;
+    padding-bottom: 9px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+
+  .cvp__tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 2px 8px 3px;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    transform: rotate(-2deg);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .cvp h1 {
+    font-family: Grenze, Georgia, serif;
+    font-size: 26pt;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .cvp__title {
+    display: inline;
+    margin-top: 4px;
+    font-size: 11pt;
+    font-weight: 600;
+    /* Highlighter band behind the lower half, as on the site; light enough for black and white.
+       A solid inset shadow, not a gradient: pdf.js (the site previews) draws hard-stop gradients as black bars. */
+    box-shadow: inset 0 -0.42em 0 var(--mustard);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .cvp h1 + .cvp__title {
+    display: inline-block;
+    margin-top: 5px;
+  }
+
+  .cvp__goal {
+    margin-top: 3px;
+    color: var(--ink-2);
+  }
+
+  .cvp__contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 14px;
+    margin-top: 6px;
+    padding: 0;
+    list-style: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 7.6pt;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .cvp__cols {
+    display: grid;
+    grid-template-columns: 1fr 56mm;
+    gap: 0 7mm;
+  }
+
+  .cvp aside {
+    padding-left: 6mm;
+    border-left: 1px solid var(--line);
+  }
+
+  .cvp section {
+    margin-top: 10px;
+  }
+
+  /* Section labels: mono capitals after a small black square (the chapter pins of the site). */
+  .cvp h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8.4pt;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    break-after: avoid;
+  }
+
+  .cvp h2::before {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    background: var(--ink);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .cvp__body > * + * {
+    margin-top: 5px;
+  }
+
+  .cvp__body > p {
+    break-after: avoid;
+  }
+
+  .cvp__body > ul + p {
+    margin-top: 8px;
+  }
+
+  /* Company lines ("**SalMar AS · Frøya** · mai – août 2026"). */
+  .cvp__body > p > strong:first-child {
+    font-family: Grenze, Georgia, serif;
+    font-size: 10.6pt;
+    font-weight: 700;
+  }
+
+  .cvp__body ul {
+    padding-left: 12px;
+  }
+
+  .cvp__body li {
+    break-inside: avoid;
+  }
+
+  .cvp__body li::marker {
+    color: var(--accent);
+  }
+
+  .cvp__body li + li {
+    margin-top: 2px;
+  }
+
+  .cvp__body em {
+    color: var(--ink-2);
+  }
+
+  .cvp aside li + li {
+    margin-top: 5px;
+  }
+
+  .cvp aside strong {
+    font-weight: 700;
+  }
+</style>

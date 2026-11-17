@@ -1,0 +1,45 @@
+---
+// Every page of the site, in both languages, is generated from the route table.
+// The CV print pages have their own route files (src/pages/cv/): Astro bundles the CSS
+// per route file, and their light print styles must not be loaded by the site pages.
+import { experienceIds, href, langs, routes, type Lang, type RouteId } from '../i18n/routes';
+import Home from '../views/Home.astro';
+import About from '../views/About.astro';
+import Experiences from '../views/Experiences.astro';
+import Experience from '../views/Experience.astro';
+import Skills from '../views/Skills.astro';
+import Target from '../views/Target.astro';
+import Engagements from '../views/Engagements.astro';
+import Projects from '../views/Projects.astro';
+import Cv from '../views/Cv.astro';
+
+export function getStaticPaths() {
+  const PRINT_IDS: RouteId[] = ['cv-print', 'cv-ats'];
+  return langs.flatMap((lang) =>
+    routes
+      .filter((r) => !PRINT_IDS.includes(r.id))
+      .map((r) => ({
+        params: { slug: href(lang, r.id).replace(/^\/|\/$/g, '') || undefined },
+        props: { lang, id: r.id },
+      })),
+  );
+}
+
+interface Props {
+  lang: Lang;
+  id: RouteId;
+}
+
+const { lang, id } = Astro.props;
+const isExperience = (experienceIds as readonly RouteId[]).includes(id);
+---
+
+{id === 'home' && <Home lang={lang} />}
+{id === 'about' && <About lang={lang} />}
+{id === 'experiences' && <Experiences lang={lang} />}
+{isExperience && <Experience lang={lang} id={id} />}
+{id === 'skills' && <Skills lang={lang} />}
+{id === 'target' && <Target lang={lang} />}
+{id === 'engagements' && <Engagements lang={lang} />}
+{id === 'projects' && <Projects lang={lang} />}
+{id === 'cv' && <Cv lang={lang} />}

@@ -1,0 +1,104 @@
+---
+// Project cards with their filters, shared by /projets and chapter 07 of the one-page.
+// Filtered cards never get a scroll animation: an animation could leave a card visible but
+// transparent after a filter change (seen in the first version).
+import Arrow from './Arrow.astro';
+import { inline, loadPage, plain, tableOf } from '../lib/content';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  /** Heading level of each card title. */
+  level?: 2 | 3;
+}
+
+const { lang, level = 2 } = Astro.props;
+const t = ui[lang];
+const H = `h${level}` as 'h2' | 'h3';
+const { h1 } = loadPage(lang, '08-projets');
+
+// Columns: project, context, description, technologies, link.
+// The first word of the context ("Cours", "Perso", "Hackathon") is the filter category.
+const ongoing = /\b(en cours|in progress)\b/i;
+const projects = tableOf(h1).rows.map(([name, context, desc, tech, link]) => {
+  const repo = link.trim().match(/^github\.com\/\S+$/);
+  return {
+    name: plain(name),
+    context,
+    category: plain(context.split(/\s*[·,]\s*/)[0]),
+    ongoing: ongoing.test(plain(context)),
+    desc,
+    tech: tech.split(/\s*,\s*/).filter(Boolean),
+    link,
+    repo: repo ? `https://${repo[0]}` : null,
+  };
+});
+const categories = [...new Set(projects.map((p) => p.category))];
+const pastel = ['mustard', 'periwinkle', 'pink', 'lavender', 'sage'];
+---
+
+<div class="projects" data-project-grid>
+  <!-- In the page from the start (showing it from the script made the cards jump);
+       the stylesheet hides it when scripting is off, since it could do nothing. -->
+  <div class="filters" role="group" aria-label={t.filterLabel}>
+    <button type="button" aria-pressed="true" data-filter="">{t.filterAll}</button>
+    {
+      categories.map((c) => (
+        <button type="button" aria-pressed="false" data-filter={c}>
+          {c}
+        </button>
+      ))
+    }
+  </div>
+
+  <ul class="project-list">
+    {
+      projects.map((p) => (
+        <li class="card project" data-category={p.category}>
+          <div class="project__top">
+            <p class="project__context" set:html={inline(p.context)} />
+            {p.ongoing && <span class="status status--on">{t.current}</span>}
+          </div>
+          <H class="card__title">{p.name}</H>
+          <p class="card__text" set:html={inline(p.desc)} />
+          <p class="project__stack">
+            <span class="label">Stack</span>
+            <span class="tags">
+              {p.tech.map((x, i) => (
+                <span class={`tag tag--${pastel[i % pastel.length]}`}>{x}</span>
+              ))}
+            </span>
+          </p>
+          <p class="project__link">
+            {p.repo ? (
+              <a href={p.repo} rel="noopener">
+                {t.viewOnGithub}
+                <span class="sr-only"> : {p.name}</span>
+                <Arrow dir="right" />
+              </a>
+            ) : (
+              <span set:html={inline(p.link)} />
+            )}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-project-grid]').forEach((root) => {
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const cards = [...root.querySelectorAll<HTMLElement>('.project-list > li')];
+    buttons.forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const wanted = btn.dataset.filter;
+        buttons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        cards.forEach((c) => (c.hidden = !!wanted && c.dataset.category !== wanted));
+        // The thread of the one-page follows the new height.
+        window.dispatchEvent(new Event('resize'));
+      }),
+    );
+  });
+</script>

@@ -1,0 +1,23 @@
+---
+// Small diagram: pills linked by arrows ("révisions → Nemotron → Gemini → humain").
+import Arrow from './Arrow.astro';
+
+interface Props {
+  steps: string[];
+  label?: string;
+}
+
+const { steps, label } = Astro.props;
+const pastel = ['pink', 'mustard', 'periwinkle', 'sage', 'lavender'];
+---
+
+<ol class="flow" aria-label={label}>
+  {
+    steps.map((s, i) => (
+      <li>
+        {i > 0 && <Arrow dir="right" class="flow__arrow" />}
+        <span class={`chip chip--${pastel[i % pastel.length]}`}>{s}</span>
+      </li>
+    ))
+  }
+</ol>

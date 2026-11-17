@@ -1,0 +1,169 @@
+---
+// Latin and latin-ext subsets only: together they cover every character of content/
+// (é, œ, ø, ä, « », –, ·, ×). None of the four fonts has the arrows: they are drawn (Arrow.astro).
+// latin-ext is declared first: in the other order Chrome downloaded it on every page for nothing.
+// One weight of the mono and handwritten fonts only (Lighthouse: the fonts held back the
+// portrait of the home page); the stylesheet turns off faux bold, so 600 and 700 use them as is.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource/grenze/latin-ext-700.css';
+import '@fontsource/grenze/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-ext-500.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource/caveat/latin-ext-600.css';
+import '@fontsource/caveat/latin-600.css';
+import '../styles/global.css';
+// The two fonts of the first screen are preloaded: without it each one arrives late and
+// forces a new layout of the whole page (labels and handwritten notes can wait).
+import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import displayFont from '@fontsource/grenze/files/grenze-latin-700-normal.woff2?url';
+import { chapterOf, href, langs, type Lang, type RouteId } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+import { profile } from '../data/profile';
+import { inline, plain } from '../lib/content';
+import { siteData } from '../lib/site';
+
+interface Props {
+  lang: Lang;
+  id: RouteId;
+  /** Page title, without the site name. Omit on the home page. */
+  title?: string;
+  description?: string;
+  /** Analysis pages get the reading progress bar and the "back to top" link (SPEC §5). */
+  analysis?: boolean;
+  /** Pages that search engines should leave out (the 404 page). */
+  noindex?: boolean;
+}
+
+const { lang, id, title, description, analysis = false, noindex = false } = Astro.props;
+const t = ui[lang];
+const site = siteData(lang);
+const fullTitle = title ? `${plain(title)} · ${profile.name}` : site.seoTitle;
+const baseDesc = plain(description ?? site.seoDesc);
+// A one-line chapter summary is too short to stand alone in a search result: name the page first.
+const desc = title && baseDesc.length < 60 ? `${plain(title)} · ${baseDesc}` : baseDesc;
+const canonical = new URL(href(lang, id), Astro.site);
+const current = chapterOf(id);
+// Share image, made by "npm run og" (scripts/make-og.mjs) from the /og/ page.
+const share = new URL(`/og-${lang}.png`, Astro.site);
+const updated = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'long' }).format(new Date());
+---
+
+<!doctype html>
+<html lang={lang} id="top">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    {langs.map((l) => <link rel="alternate" hreflang={l} href={new URL(href(l, id), Astro.site)} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(href('fr', id), Astro.site)} />
+    <link rel="preload" as="font" type="font/woff2" href={interFont} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={displayFont} crossorigin />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#ebe7e0" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_GB'} />
+    <meta property="og:image" content={share} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${profile.name} · ${plain(site.tagline)}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip" href="#contenu">{t.skip}</a>
+    {analysis && <div class="progress" aria-hidden="true"><span data-progress /></div>}
+
+    <header class="site-header">
+      <div class="wrap site-header__in">
+        <div class="brand">
+          <a class="logo" href={href(lang, 'home')}>
+            MC<span class="sr-only">, {t.home}</span>
+          </a>
+          <span class="stage">{site.stage}</span>
+        </div>
+        <nav class="site-nav" aria-label={t.mainNav}>
+          <ul>
+            {
+              site.chapters.map((c) => (
+                <li>
+                  <a href={href(lang, c.id)} aria-current={c.id === current ? (c.id === id ? 'page' : 'true') : undefined}>
+                    {c.title}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        <div class="lang" role="group" aria-label={t.language}>
+          {
+            langs.map((l) => (
+              <a href={href(l, id)} lang={l} hreflang={l} aria-current={l === lang ? 'true' : undefined} title={t.langName[l]}>
+                {l.toUpperCase()}
+                <span class="sr-only"> ({t.langName[l]})</span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </header>
+
+    <main id="contenu" tabindex="-1">
+      <slot />
+      {
+        analysis && (
+          <div class="wrap">
+            <a class="to-top" href="#top">
+              <span aria-hidden="true">↑</span> {t.backToTop}
+            </a>
+          </div>
+        )
+      }
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap site-footer__in">
+        <div>
+          <p class="site-footer__quote">{site.footer.quote}</p>
+          <p set:html={inline(site.footer.credit)} />
+          <p>{site.footer.updatedLabel}{t.updatedSep}{updated}</p>
+        </div>
+        <nav aria-label={t.footerNav}>
+          <ul>
+            <li><a href={profile.linkedin} rel="noopener">LinkedIn</a></li>
+            <li><a href={profile.github} rel="noopener">GitHub</a></li>
+            <li><a href={`mailto:${profile.email}`}>{profile.email}</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
+
+    <script>
+      // Reading progress. The bar stays empty without JavaScript: nothing depends on it.
+      const bar = document.querySelector<HTMLElement>('[data-progress]');
+      if (bar) {
+        const update = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
+        };
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+      }
+
+      // Smooth scroll and scroll animations are an extra: skipped entirely with "reduce motion",
+      // and started once the page is loaded and the browser is idle, so they never delay reading.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const start = () => import('../scripts/motion').then((m) => m.initMotion()).catch(() => {});
+        const whenIdle = () => ('requestIdleCallback' in window ? requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 200));
+        if (document.readyState === 'complete') whenIdle();
+        else window.addEventListener('load', whenIdle, { once: true });
+      }
+    </script>
+  </body>
+</html>

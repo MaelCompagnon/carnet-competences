@@ -1,0 +1,25 @@
+---
+// Generic rendering of "##" sections and their "###" sub-sections.
+import { render, inline, type Section } from '../lib/content';
+
+interface Props {
+  sections: Section[];
+}
+
+const { sections } = Astro.props;
+---
+
+{
+  sections.map((s) => (
+    <section class="section" aria-labelledby={s.id} data-reveal>
+      <h2 id={s.id} set:html={inline(s.title)} />
+      {s.tokens.length > 0 && <div class="prose" set:html={render(s.tokens)} />}
+      {s.children.map((c) => (
+        <>
+          <h3 id={c.id} set:html={inline(c.title)} />
+          <div class="prose" set:html={render(c.tokens)} />
+        </>
+      ))}
+    </section>
+  ))
+}

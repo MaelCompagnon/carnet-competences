@@ -1,0 +1,19 @@
+---
+// Head of a one-page chapter: the pin of the thread, the title, the handwritten note.
+import Arrow from './Arrow.astro';
+
+interface Props {
+  num: string;
+  title: string;
+  note: string;
+  id: string;
+}
+
+const { num, title, note, id } = Astro.props;
+---
+
+<header class="chapter__head">
+  <span class="pin" data-pin aria-hidden="true">{num}</span>
+  <h2 id={id}>{title}</h2>
+  <p class="note" data-write><Arrow />{note}</p>
+</header>

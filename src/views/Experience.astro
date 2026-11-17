@@ -1,0 +1,95 @@
+---
+import { Image } from 'astro:assets';
+import junctionPhoto from '../../assets/mael-junction.png';
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import DocGallery from '../components/DocGallery.astro';
+import PageHead from '../components/PageHead.astro';
+import Sections from '../components/Sections.astro';
+import fs from 'node:fs';
+import { at, fieldHtml, fieldsOf, inline, loadPage, plain, render } from '../lib/content';
+import { docsOf } from '../lib/documents';
+import { experienceIds, href, route, type Lang, type RouteId } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  id: RouteId;
+}
+
+const { lang, id } = Astro.props;
+const t = ui[lang];
+const { h1, title, sections } = loadPage(lang, route(id).file);
+// The lines under the title ("Type", "Dates"…) form the fact sheet.
+const { fields, rest } = fieldsOf(h1.tokens);
+const type = at(fields, 0, h1.where);
+const index = (experienceIds as readonly RouteId[]).indexOf(id);
+const others = experienceIds
+  .filter((x) => x !== id)
+  .map((x) => ({ id: x, title: loadPage(lang, route(x).file).title }));
+// Junction: the place and date line doubles as the caption of the photo.
+const caption = id === 'junction' ? fields[1]?.value : undefined;
+// Reports linked from this page's evidence line are also shown as documents, under the analysis.
+const raw = fs.readFileSync(`content/${lang}/${route(id).file}.md`, 'utf8');
+const reports = docsOf(lang, 'report').filter((d) => raw.includes(d.file));
+---
+
+<Base lang={lang} id={id} title={title} description={`${plain(title)} · ${plain(type.value)}`} analysis>
+  <article class="page wrap">
+    <PageHead num="03" title={title} kicker={`${t.experience} ${index + 1}/${experienceIds.length}`} />
+
+    <div class="column">
+      <dl class="facts">
+        {
+          fields.map((f) => (
+            <div>
+              <dt set:html={inline(f.label)} />
+              <dd set:html={fieldHtml(f)} />
+            </div>
+          ))
+        }
+      </dl>
+      {rest.length > 0 && <div class="prose" set:html={render(rest)} />}
+    </div>
+
+    {
+      id === 'junction' && (
+        <figure class="polaroid photo" style="--r:-1.2deg">
+          <span class="tape tape--tl" aria-hidden="true" />
+          <span class="tape tape--br" aria-hidden="true" />
+          <Image src={junctionPhoto} alt={t.junctionPhotoAlt} widths={[480, 900, 1640]} sizes="(max-width: 900px) 92vw, 820px" />
+          {caption && <figcaption set:html={inline(caption)} />}
+        </figure>
+      )
+    }
+
+    <div class="column">
+      <Sections sections={sections} />
+    </div>
+
+    {
+      reports.length > 0 && (
+        <section class="section" aria-labelledby="rapports">
+          <h2 id="rapports">{t.docs.reports}</h2>
+          <DocGallery lang={lang} docs={reports} level={3} />
+        </section>
+      )
+    }
+
+    <nav class="pager" aria-labelledby="autres" data-reveal>
+      <h2 id="autres">{t.otherExperiences}</h2>
+      <div class="grid">
+        {
+          others.map((o) => (
+            <a class="card" href={href(lang, o.id)}>
+              <span class="card__title" set:html={inline(o.title)} />
+              <span class="card__more">
+                {t.readAnalysis} <Arrow dir="right" />
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </nav>
+  </article>
+</Base>

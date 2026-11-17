@@ -1,0 +1,178 @@
+---
+// The share image (1200 × 630), as a page: "npm run og" takes a screenshot of it into
+// public/og-<lang>.png. Not indexed, not linked. Its text comes from the home content.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource/grenze/latin-700.css';
+import '@fontsource/grenze/latin-ext-700.css';
+import '@fontsource/ibm-plex-mono/latin-600.css';
+import '@fontsource/caveat/latin-700.css';
+import { Image } from 'astro:assets';
+import portrait from '../../assets/mael-portrait-recadre.png';
+import { inline, plain, splitDot } from '../lib/content';
+import { highlight, onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const site = siteData(lang);
+const op = onePage(lang);
+const [label, ...rest] = splitDot(site.kicker);
+const tagline = highlight(inline(site.tagline), op.heroWords, '00-accueil.md › Accroche (10-une-page.md)');
+---
+
+<!doctype html>
+<html lang={lang} class="og">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{plain(site.name)}</title>
+  </head>
+  <body>
+    <div class="og__card">
+      <svg class="og__thread" viewBox="0 0 1200 630" aria-hidden="true">
+        <path d="M86 118 C 40 240, 70 380, 52 470 S 80 600, 70 660" />
+      </svg>
+      <div class="og__text">
+        <p class="og__top"><span class="og__tag">{label}</span><span class="og__kicker">{rest.join(' · ')}</span></p>
+        <p class="og__name">{site.name}</p>
+        <p class="og__tagline" set:html={tagline} />
+      </div>
+      <figure class="og__polaroid">
+        <span class="og__tape" aria-hidden="true"></span>
+        <Image src={portrait} alt="" width={330} height={330} loading="eager" />
+        <figcaption>{op.portraitCaption}</figcaption>
+      </figure>
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  /* Scoped to .og: this page shares nothing with the site's stylesheet. */
+  html.og,
+  .og body {
+    margin: 0;
+    background: #ebe7e0;
+  }
+
+  .og__card {
+    position: relative;
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    background: #ebe7e0;
+    color: #1b1a1f;
+    font-family: 'Inter Variable', Inter, Arial, sans-serif;
+  }
+
+  .og__thread {
+    position: absolute;
+    inset: 0;
+  }
+
+  .og__thread path {
+    fill: none;
+    stroke: #8a3858;
+    stroke-width: 4;
+    stroke-linecap: round;
+  }
+
+  .og__text {
+    position: absolute;
+    left: 110px;
+    top: 92px;
+    width: 640px;
+  }
+
+  .og__top {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin: 0;
+  }
+
+  .og__tag {
+    padding: 6px 14px 7px;
+    background: #1b1a1f;
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 21px;
+    font-weight: 600;
+    transform: rotate(-2deg);
+  }
+
+  .og__kicker {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #625d58;
+  }
+
+  .og__name {
+    margin: 46px 0 0;
+    font-family: Grenze, Georgia, serif;
+    font-size: 112px;
+    font-weight: 700;
+    line-height: 0.92;
+  }
+
+  .og__tagline {
+    margin: 30px 0 0;
+    font-size: 30px;
+    line-height: 1.4;
+  }
+
+  .og .hl {
+    background-image: linear-gradient(transparent 56%, var(--hl) 56%, var(--hl) 94%, transparent 94%);
+    --hl: #d9a640;
+  }
+
+  .og .hl--periwinkle {
+    --hl: #b6c3f2;
+  }
+
+  .og .hl--pink {
+    --hl: #e7bccd;
+  }
+
+  .og__polaroid {
+    position: absolute;
+    right: 70px;
+    top: 120px;
+    margin: 0;
+    padding: 16px 16px 0;
+    background: #fff;
+    box-shadow: 0 18px 30px -18px rgb(27 26 31 / 0.5);
+    transform: rotate(3deg);
+  }
+
+  .og__polaroid img {
+    display: block;
+    width: 330px;
+    height: 330px;
+    object-fit: cover;
+  }
+
+  .og__polaroid figcaption {
+    padding: 12px 0 18px;
+    font-family: Caveat, cursive;
+    font-size: 34px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .og__tape {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    width: 130px;
+    height: 34px;
+    background: rgb(211 206 193 / 0.9);
+    transform: translateX(-50%) rotate(-3deg);
+  }
+</style>

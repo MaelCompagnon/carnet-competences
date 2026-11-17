@@ -1,0 +1,392 @@
+---
+// The one-page: every chapter of the portfolio on a single page, tied together by a thread
+// that runs from one chapter number to the next. Each block comes from content/ (the same
+// files as the detailed pages); only the handwritten notes come from 10-une-page.md.
+import { Image } from 'astro:assets';
+import type { Tokens } from 'marked';
+import portrait from '../../assets/mael-portrait-recadre.png';
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import ChapterHead from '../components/ChapterHead.astro';
+import DocGallery from '../components/DocGallery.astro';
+import ExperienceSheet from '../components/ExperienceSheet.astro';
+import Matrix from '../components/Matrix.astro';
+import ProjectGrid from '../components/ProjectGrid.astro';
+import { at, fieldHtml, fieldsOf, inline, listOf, loadPage, plain, render, splitDot, tableOf, type Section } from '../lib/content';
+import { docsOf } from '../lib/documents';
+import { experienceSheets } from '../lib/experiences';
+import { highlight, onePage } from '../lib/onepage';
+import { skillsData } from '../lib/skills';
+import { siteData } from '../lib/site';
+import { href, type Lang, type RouteId } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const site = siteData(lang);
+const op = onePage(lang);
+const t = ui[lang];
+const [kickerLabel, ...kickerRest] = splitDot(site.kicker);
+const subItems = splitDot(site.sub);
+const num = (i: number) => String(i + 1).padStart(2, '0');
+const tilt = ['-1.5', '1.2', '-0.8', '1.6'];
+const pastel = ['mustard', 'periwinkle', 'pink', 'lavender'];
+const chips = ['pink', 'mustard', 'periwinkle', 'sage', 'lavender'];
+const sectionId = (s: Section) => `op-${s.id}`;
+const firstParagraph = (s: Section) => (s.tokens.find((x) => x.type === 'paragraph') as Tokens.Paragraph | undefined)?.text ?? '';
+const detail: RouteId[] = ['home', 'about', 'experiences', 'skills', 'target', 'engagements', 'projects', 'cv'];
+const chapter = (i: number) => ({ num: num(i), title: op.chapters[i].title, note: op.chapters[i].note, link: op.chapters[i].link ?? '', href: href(lang, detail[i]) });
+
+// 02 · Who I am
+const about = loadPage(lang, '01-qui-je-suis');
+const words = at(about.sections, 0, about.doc.file);
+const path = at(about.sections, 1, about.doc.file);
+const atWork = at(about.sections, 4, about.doc.file);
+const steps = tableOf(path).rows;
+const strengths = tableOf(atWork);
+const wordsHtml = highlight(render(words.tokens), op.aboutWords, `${words.where} (10-une-page.md)`);
+const taglineHtml = highlight(inline(site.tagline), op.heroWords, `00-accueil.md › Accroche (10-une-page.md)`);
+
+// 03 · Experiences
+const sheets = experienceSheets(lang);
+
+// 04 · Skills
+const skills = skillsData(lang);
+
+// 05 · Target role: the role and its three specialties, the gap table, the four plan titles.
+const target = loadPage(lang, '06-metier-vise');
+const role = at(target.sections, 0, target.doc.file);
+const gap = at(target.sections, 2, target.doc.file);
+const plan = at(target.sections, 3, target.doc.file);
+const specialties = listOf(role).map((raw) => {
+  const m = raw.match(/^\*\*(.+?)\*\*\s*(.*)$/s);
+  return { title: plain(m?.[1] ?? raw).replace(/\s*:\s*$/, ''), text: (m?.[2] ?? '').replace(/^:\s*/, '') };
+});
+const LEVEL: Record<string, string> = { '🟢': 'ok', '🟠': 'mid', '🔴': 'gap' };
+const gapRows = tableOf(gap).rows.map(([need, level, proof]) => {
+  const m = level.trim().match(/^(🟢|🟠|🔴)\s*(.*)$/u);
+  return { need, level: m ? m[2] : level, cls: m ? LEVEL[m[1]] : 'mid', proof };
+});
+
+// 06 · Volunteering: the two roles, what they gave me, the time, the certificates.
+const eng = loadPage(lang, '07-engagements');
+const roles = [1, 2].map((i) => {
+  const s = at(eng.sections, i, eng.doc.file);
+  return { section: s, fields: fieldsOf(s.tokens).fields };
+});
+const gained = at(eng.sections, 3, eng.doc.file);
+const time = at(eng.sections, 4, eng.doc.file);
+const certs = at(eng.sections, 5, eng.doc.file);
+const gainedRows = tableOf(gained).rows;
+---
+
+<Base lang={lang} id="home">
+  <div class="onepage" data-onepage>
+    <svg class="thread" aria-hidden="true" focusable="false"><path class="thread__path" d=""></path></svg>
+
+    <nav class="toc" aria-label={t.toc}>
+      <ol>
+        {
+          op.chapters.map((c, i) => (
+            <li>
+              <a href={`#ch-${num(i)}`} data-toc>
+                <span class="toc__num" aria-hidden="true">
+                  {num(i)}
+                </span>
+                <span class="toc__label">{c.title}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    {op.pending.length > 0 && <p class="wrap op-pending">{op.pending.map((m) => <mark class="marker">{m}</mark>)}</p>}
+
+    <!-- 01 · Home -->
+    <section id="ch-01" class="chapter chapter--hero" aria-labelledby="hero-name">
+      <div class="wrap">
+        <div class="hero-top">
+          <p class="tag-block">{kickerLabel}</p>
+          <p class="label">{kickerRest.join(' · ')}</p>
+        </div>
+        <div class="chapter__head chapter__head--hero">
+          <span class="pin" data-pin aria-hidden="true">01</span>
+          <p class="note" data-write><Arrow />{op.chapters[0].note}</p>
+        </div>
+
+        <div class="hero">
+          <figure class="polaroid" data-polaroid>
+            <span class="tape tape--tl" aria-hidden="true"></span>
+            <span class="tape tape--br" aria-hidden="true"></span>
+            <Image
+              src={portrait}
+              alt={t.portraitAlt}
+              width={420}
+              height={420}
+              widths={[320, 420, 840]}
+              sizes="(min-width: 1024px) 412px, min(78vw, 312px)"
+              loading="eager"
+              fetchpriority="high"
+            />
+            <figcaption>{op.portraitCaption}</figcaption>
+          </figure>
+
+          <div class="hero__text">
+            <h1 id="hero-name" class="hero__name">{site.name}</h1>
+            <p class="hero__tagline" set:html={taglineHtml} />
+            <ul class="dots">
+              {subItems.map((s) => <li set:html={inline(s)} />)}
+            </ul>
+            <div class="hero__cta">
+              {
+                site.cta.map((b, i) => (
+                  <a class:list={['btn', i === 0 && 'btn--ink']} href={href(lang, b.id)}>
+                    {b.label}
+                  </a>
+                ))
+              }
+            </div>
+            <p class="availability"><span class="availability__dot" aria-hidden="true"></span><span set:html={inline(site.badge)} /></p>
+          </div>
+        </div>
+
+        <h2 class="sr-only">{site.statsTitle}</h2>
+        <p class="note note--right" data-write>{op.statsNote}<Arrow dir="down" /></p>
+        <ul class="stats">
+          {
+            site.stats.map((s, i) => (
+              <li class={`postit postit--${pastel[i]}`} style={`--r:${tilt[i]}deg`} data-postit>
+                <span class="tape" aria-hidden="true" />
+                <span class="sr-only">{s.value}</span>
+                <span class="stats__value" aria-hidden="true" data-count>
+                  {s.value}
+                </span>
+                <span class="stats__label" set:html={inline(s.label)} />
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- 02 · Who I am -->
+    <section id="ch-02" class="chapter" aria-labelledby="ch-02-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(1)} id="ch-02-title" />
+
+        <article class="card card--words" aria-labelledby={sectionId(words)} data-card>
+          <h3 id={sectionId(words)} set:html={inline(words.title)} />
+          <div class="prose" set:html={wordsHtml} />
+        </article>
+
+        <h3 class="block-title" id={sectionId(path)} set:html={inline(path.title)} />
+        <ol class="steps">
+          {
+            steps.map(([when, what, detail], i) => (
+              <li class="card step" data-card>
+                <p class="label">
+                  {when}
+                  {i === steps.length - 1 && <span class="status status--on">{t.current}</span>}
+                </p>
+                <p class="step__title" set:html={inline(what)} />
+                <p class="step__detail" set:html={inline(detail)} />
+              </li>
+            ))
+          }
+        </ol>
+
+        <h3 class="block-title" id={sectionId(atWork)} set:html={inline(atWork.title)} />
+        <p class="block-intro" set:html={inline(firstParagraph(atWork))} />
+        <ul class="postits">
+          {
+            strengths.rows.map(([name, proof], i) => (
+              <li class={`postit postit--${pastel[i]}`} style={`--r:${tilt[(i + 1) % 4]}deg`} data-postit>
+                <span class="tape" aria-hidden="true" />
+                <p class="postit__label">{plain(strengths.head[0])}</p>
+                <p class="postit__title" set:html={inline(name)} />
+                <p class="postit__text" set:html={inline(proof)} />
+              </li>
+            ))
+          }
+        </ul>
+
+        <p class="chapter__more"><a class="btn" href={chapter(1).href}>{chapter(1).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 03 · Experiences: on wide screens the section is pinned and the sheets slide sideways (onepage-fx.ts) -->
+    <section id="ch-03" class="chapter" aria-labelledby="ch-03-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(2)} id="ch-03-title" />
+      </div>
+      <div class="sheets" data-sheets>
+        <div class="sheets__track">
+          {sheets.map((s, i) => <ExperienceSheet lang={lang} sheet={s} index={i} flow={op.diagram} flowPending={op.diagramPending} />)}
+        </div>
+      </div>
+      <div class="wrap">
+        <p class="chapter__more"><a class="btn" href={chapter(2).href}>{chapter(2).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 04 · Skills -->
+    <section id="ch-04" class="chapter" aria-labelledby="ch-04-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(3)} id="ch-04-title" />
+        <h3 class="sr-only" id={sectionId(skills.levels)} set:html={inline(skills.levels.title)} />
+        <ul class="levels levels--row" aria-labelledby={sectionId(skills.levels)}>
+          {
+            skills.levelList.map((l, i) => (
+              <li>
+                <span class={`pill pill--l${i + 1}`}>{l.name}</span>
+                <span set:html={inline(l.text)} />
+              </li>
+            ))
+          }
+        </ul>
+        <div class="card card--matrix">
+          <h3 id="op-matrice">{t.matrixTitle}</h3>
+          <Matrix lang={lang} groups={skills.matrix} />
+        </div>
+        <div class="postit postit--lavender postit--quote" style="--r:-1deg" data-postit>
+          <span class="tape" aria-hidden="true"></span>
+          <h3 class="postit__label" set:html={inline(skills.summary.title)} />
+          <div class="postit__quote" set:html={render(skills.summary.tokens)} />
+        </div>
+        <p class="chapter__more"><a class="btn" href={chapter(3).href}>{chapter(3).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 05 · Target role -->
+    <section id="ch-05" class="chapter" aria-labelledby="ch-05-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(4)} id="ch-05-title" />
+        <div class="card card--words" data-card>
+          <h3 id={sectionId(role)} set:html={inline(role.title)} />
+          <p set:html={inline(firstParagraph(role))} />
+        </div>
+        <ul class="postits">
+          {
+            specialties.map((s, i) => (
+              <li class={`postit postit--${pastel[(i + 1) % 4]}`} style={`--r:${tilt[i]}deg`} data-postit>
+                <span class="tape" aria-hidden="true" />
+                <p class="postit__title" set:html={inline(s.title)} />
+                <p class="postit__text" set:html={inline(s.text)} />
+              </li>
+            ))
+          }
+        </ul>
+
+        <h3 class="block-title" id={sectionId(gap)} set:html={inline(gap.title)} />
+        <ul class="gap card" data-card>
+          {
+            gapRows.map((r) => (
+              <li>
+                <span class="gap__need" set:html={inline(r.need)} />
+                <span class={`pill pill--${r.cls}`}>{r.level}</span>
+                <span class="gap__proof" set:html={inline(r.proof)} />
+              </li>
+            ))
+          }
+        </ul>
+
+        <h3 class="block-title" id={sectionId(plan)} set:html={inline(plan.title)} />
+        <ol class="steps steps--4">
+          {
+            plan.children.map((c) => {
+              const m = c.title.match(/^(\d+)\.\s*(.*)$/);
+              return (
+                <li class="card step" data-card>
+                  <p class="label">{m ? m[1].padStart(2, '0') : ''}</p>
+                  <p class="step__title" set:html={inline(m ? m[2] : c.title)} />
+                </li>
+              );
+            })
+          }
+        </ol>
+        <p class="chapter__more"><a class="btn" href={chapter(4).href}>{chapter(4).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 06 · Volunteering -->
+    <section id="ch-06" class="chapter" aria-labelledby="ch-06-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(5)} id="ch-06-title" />
+        <div class="roles">
+          {
+            roles.map(({ section, fields }) => (
+              <article class="card" aria-labelledby={sectionId(section)} data-card>
+                <h3 id={sectionId(section)} set:html={inline(section.title)} />
+                <dl class="facts facts--sheet">
+                  {fields.map((f) => (
+                    <div>
+                      <dt set:html={inline(f.label)} />
+                      <dd set:html={fieldHtml(f)} />
+                    </div>
+                  ))}
+                </dl>
+              </article>
+            ))
+          }
+        </div>
+
+        <div class="gained">
+          <div>
+            <h3 class="block-title" id={sectionId(gained)} set:html={inline(gained.title)} />
+            <ul class="gained__list">
+              {
+                gainedRows.map(([quality, where], i) => (
+                  <li>
+                    <span class={`chip chip--${chips[i % chips.length]}`}>{plain(quality)}</span>
+                    <span set:html={inline(where)} />
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+          <div class="postit postit--mustard" style="--r:1.4deg" data-postit>
+            <span class="tape" aria-hidden="true"></span>
+            <h3 class="postit__label" id={sectionId(time)} set:html={inline(time.title)} />
+            <div class="postit__text prose" set:html={render(time.tokens)} />
+          </div>
+        </div>
+
+        <h3 class="block-title" id={sectionId(certs)} set:html={inline(certs.title)} />
+        <DocGallery lang={lang} docs={docsOf(lang, 'engagement')} level={4} />
+        <p class="chapter__more"><a class="btn" href={chapter(5).href}>{chapter(5).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 07 · Projects -->
+    <section id="ch-07" class="chapter" aria-labelledby="ch-07-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(6)} id="ch-07-title" />
+        <ProjectGrid lang={lang} level={3} />
+        <p class="chapter__more"><a class="btn" href={chapter(6).href}>{chapter(6).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+
+    <!-- 08 · CV and documents -->
+    <section id="ch-08" class="chapter" aria-labelledby="ch-08-title">
+      <div class="wrap">
+        <ChapterHead {...chapter(7)} id="ch-08-title" />
+        <DocGallery lang={lang} docs={docsOf(lang, 'cv')} level={3} />
+        <h3 class="block-title">{t.docs.reports}</h3>
+        <DocGallery lang={lang} docs={docsOf(lang, 'report')} level={4} />
+        <p class="chapter__more"><a class="btn" href={chapter(7).href}>{chapter(7).link}<Arrow dir="right" /></a></p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { initThread } from '../scripts/thread';
+  // The thread is drawn by a small script without any library, so that it exists even with
+  // "reduce motion" (fully drawn, static). Without JavaScript a plain CSS line stands in.
+  const host = document.querySelector<HTMLElement>('[data-onepage]');
+  if (host) initThread(host);
+</script>

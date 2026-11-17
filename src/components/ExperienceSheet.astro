@@ -1,0 +1,90 @@
+---
+// One experience as a sheet pinned on the board: fact sheet, what I took from it (pills),
+// the link with the role I am aiming for, and the way to the full analysis.
+import { Image } from 'astro:assets';
+import junctionPhoto from '../../assets/mael-junction.png';
+import Arrow from './Arrow.astro';
+import Flow from './Flow.astro';
+import { fieldHtml, inline } from '../lib/content';
+import type { ExperienceSheet } from '../lib/experiences';
+import { experienceIds, href, type Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  sheet: ExperienceSheet;
+  index: number;
+  /** TimeProof steps, drawn on the Junction sheet. */
+  flow?: string[];
+  flowPending?: string[];
+  level?: 2 | 3;
+}
+
+const { lang, sheet, index, flow = [], flowPending = [], level = 3 } = Astro.props;
+const t = ui[lang];
+const H = `h${level}` as 'h2' | 'h3';
+const id = `sheet-${sheet.id}`;
+const pastel = ['mustard', 'periwinkle', 'pink', 'lavender', 'sage'];
+const isJunction = sheet.id === 'junction';
+// The place and date line of the Junction sheet doubles as the caption of its photo.
+const caption = isJunction ? sheet.fields[1]?.value : undefined;
+---
+
+<article class:list={['sheet', isJunction && 'sheet--photo']} aria-labelledby={id} data-sheet>
+  <span class="tape" aria-hidden="true"></span>
+  <p class="label">{t.experience} {index + 1}/{experienceIds.length}</p>
+  <H id={id} class="sheet__title" set:html={inline(sheet.title)} />
+
+  <div class="sheet__grid">
+    <dl class="facts facts--sheet">
+      {
+        sheet.fields.map((f) => (
+          <div>
+            <dt set:html={inline(f.label)} />
+            <dd set:html={fieldHtml(f)} />
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="sheet__col">
+      <p class="label" set:html={inline(sheet.takeawaysTitle)} />
+      <ul class="chips">
+        {sheet.takeaways.map((k, i) => <li class={`chip chip--${pastel[i % pastel.length]}`}>{k.skill}</li>)}
+      </ul>
+      {
+        isJunction && flow.length > 0 && (
+          <>
+            <Flow steps={flow} label="TimeProof" />
+            {flowPending.map((m) => (
+              <p>
+                <mark class="marker">{m}</mark>
+              </p>
+            ))}
+          </>
+        )
+      }
+    </div>
+
+    <div class="sheet__col">
+      <p class="label" set:html={inline(sheet.linkTitle)} />
+      <p class="sheet__link" set:html={inline(sheet.link)} />
+      {
+        isJunction && (
+          <figure class="polaroid polaroid--small" style="--r: 2.5deg" data-polaroid>
+            <span class="tape tape--tl" aria-hidden="true" />
+            <Image src={junctionPhoto} alt={t.junctionPhotoAlt} widths={[300, 600]} sizes="260px" />
+            {caption && <figcaption set:html={inline(caption)} />}
+          </figure>
+        )
+      }
+      <p class="sheet__more">
+        <a class="btn" href={href(lang, sheet.id)}>
+          {t.readAnalysis}
+          <span class="sr-only"> : {sheet.title.replace(/[*`]/g, '')}</span>
+          <Arrow dir="right" />
+        </a>
+      </p>
+    </div>
+  </div>
+</article>

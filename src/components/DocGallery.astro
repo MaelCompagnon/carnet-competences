@@ -1,0 +1,187 @@
+---
+// Documents shown in the site (PROMPT §5): a page image for each document, and the download
+// and "open in a new tab" buttons, always visible. Without JavaScript the image is a link to
+// the PDF. With it, the image opens a full-screen viewer (arrow keys, Escape, focus kept inside).
+// A phone without a PDF reader still sees every page: the images are rendered at build time.
+import type { DocView } from '../lib/documents';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  docs: DocView[];
+  /** Heading level of each document title, so the outline stays correct where it is used. */
+  level?: 3 | 4;
+}
+
+const { lang, docs, level = 3 } = Astro.props;
+const d = ui[lang].docs;
+const H = `h${level}` as 'h3' | 'h4';
+const describe = (doc: DocView, page: number) => `${d.page} ${page} ${d.of} ${doc.pages} : ${doc.title}, ${doc.owner}`;
+---
+
+<ul
+  class="docs"
+  data-docs
+  data-l-close={d.close}
+  data-l-prev={d.prev}
+  data-l-next={d.next}
+  data-l-viewer={d.viewer}
+  data-l-download={d.download}
+  data-l-open={d.open}
+>
+  {
+    docs.map((doc) => {
+      const first = doc.images[0];
+      const partial = doc.images.length > 0 && doc.images.length < doc.pages;
+      const pages = doc.images.map((img) => ({ src: img.src, w: img.width, h: img.height, alt: describe(doc, img.page) }));
+      return (
+        <li class="doc">
+          {first ? (
+            <a
+              class="doc__thumb"
+              href={doc.file}
+              data-viewer
+              data-title={doc.title}
+              data-size={doc.size}
+              data-pages={JSON.stringify(pages)}
+              data-partial={partial ? `${doc.images.length}/${doc.pages}` : undefined}
+            >
+              <img src={first.thumb} alt={`${d.show} : ${doc.title}`} width={480} height={Math.round((first.height / first.width) * 480)} loading="lazy" decoding="async" />
+            </a>
+          ) : (
+            <a class="doc__thumb doc__thumb--none" href={doc.file}>
+              <span>PDF</span>
+              <span class="sr-only"> : {doc.title}</span>
+            </a>
+          )}
+          <div class="doc__body">
+            <H class="doc__title">{doc.title}</H>
+            <p class="doc__meta">
+              PDF · {d.pages(doc.pages)} · {doc.size}
+              {partial && <span> · {d.firstOnly}</span>}
+            </p>
+            <div class="doc__actions">
+              <a class="btn btn--ink btn--small" href={doc.file} download>
+                {d.download} (PDF, {doc.size})<span class="sr-only"> : {doc.title}</span>
+              </a>
+              <a class="btn btn--small" href={doc.file} target="_blank" rel="noopener">
+                {d.open}<span class="sr-only"> : {doc.title}</span>
+              </a>
+            </div>
+          </div>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<script>
+  // One viewer per page, created on first use: it only exists when JavaScript runs.
+  interface Page {
+    src: string;
+    w: number;
+    h: number;
+    alt: string;
+  }
+  let dialog: HTMLDialogElement | null = null;
+
+  function svgArrow(dir: 'left' | 'right') {
+    const rot = dir === 'right' ? ' style="transform:rotate(180deg)"' : '';
+    return `<svg class="arrow" aria-hidden="true" focusable="false" viewBox="0 0 32 16" width="1.6em" height="0.8em"${rot}><path d="M30 9.2c-6.5-1.6-15.4-1.9-26.6-.6"/><path d="M9.6 2.6 3.2 8.7l6.9 4.9"/></svg>`;
+  }
+
+  function build(labels: DOMStringMap) {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'viewer';
+    dlg.setAttribute('aria-label', labels.lViewer ?? '');
+    dlg.setAttribute('data-lenis-prevent', '');
+    dlg.innerHTML = `
+      <div class="viewer__bar">
+        <p class="viewer__title" data-v-title></p>
+        <p class="viewer__count" data-v-count aria-live="polite"></p>
+        <div class="viewer__actions">
+          <a class="btn btn--ink btn--small" data-v-download download></a>
+          <a class="btn btn--small" data-v-open target="_blank" rel="noopener"></a>
+          <button type="button" class="btn btn--small" data-v-close></button>
+        </div>
+      </div>
+      <div class="viewer__stage">
+        <button type="button" class="viewer__nav viewer__nav--prev" data-v-prev>${svgArrow('left')}<span class="sr-only"></span></button>
+        <img class="viewer__img" data-v-img alt="" />
+        <button type="button" class="viewer__nav viewer__nav--next" data-v-next>${svgArrow('right')}<span class="sr-only"></span></button>
+      </div>`;
+    dlg.querySelector<HTMLButtonElement>('[data-v-close]')!.textContent = labels.lClose ?? '';
+    dlg.querySelector('[data-v-prev] .sr-only')!.textContent = labels.lPrev ?? '';
+    dlg.querySelector('[data-v-next] .sr-only')!.textContent = labels.lNext ?? '';
+    document.body.append(dlg);
+    return dlg;
+  }
+
+  function open(link: HTMLAnchorElement, labels: DOMStringMap) {
+    dialog ??= build(labels);
+    const dlg = dialog;
+    const pages: Page[] = JSON.parse(link.dataset.pages ?? '[]');
+    const img = dlg.querySelector<HTMLImageElement>('[data-v-img]')!;
+    const count = dlg.querySelector<HTMLElement>('[data-v-count]')!;
+    const prev = dlg.querySelector<HTMLButtonElement>('[data-v-prev]')!;
+    const next = dlg.querySelector<HTMLButtonElement>('[data-v-next]')!;
+    const dl = dlg.querySelector<HTMLAnchorElement>('[data-v-download]')!;
+    const op = dlg.querySelector<HTMLAnchorElement>('[data-v-open]')!;
+    dlg.querySelector('[data-v-title]')!.textContent = link.dataset.title ?? '';
+    dl.href = op.href = link.href;
+    dl.textContent = `${labels.lDownload} (PDF, ${link.dataset.size})`;
+    op.textContent = labels.lOpen ?? '';
+    let i = 0;
+    const show = () => {
+      const p = pages[i];
+      img.src = p.src;
+      img.width = p.w;
+      img.height = p.h;
+      img.alt = p.alt;
+      count.textContent = p.alt.split(' : ')[0];
+      prev.disabled = i === 0;
+      next.disabled = i === pages.length - 1;
+      prev.hidden = next.hidden = pages.length < 2;
+    };
+    prev.onclick = () => {
+      if (i > 0) i--;
+      show();
+    };
+    next.onclick = () => {
+      if (i < pages.length - 1) i++;
+      show();
+    };
+    dlg.onkeydown = (e) => {
+      if (e.key === 'ArrowLeft' && i > 0) {
+        i--;
+        show();
+      } else if (e.key === 'ArrowRight' && i < pages.length - 1) {
+        i++;
+        show();
+      }
+    };
+    dlg.querySelector<HTMLButtonElement>('[data-v-close]')!.onclick = () => dlg.close();
+    // A click on the dark backdrop (outside the content) closes it too.
+    dlg.onclick = (e) => e.target === dlg && dlg.close();
+    dlg.onclose = () => {
+      document.dispatchEvent(new CustomEvent('viewer:toggle', { detail: false }));
+      link.focus();
+    };
+    show();
+    document.dispatchEvent(new CustomEvent('viewer:toggle', { detail: true }));
+    // showModal makes the rest of the page inert: Tab stays in the viewer, Escape closes it.
+    dlg.showModal();
+    dlg.querySelector<HTMLButtonElement>('[data-v-close]')!.focus();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-docs]').forEach((list) => {
+    list.querySelectorAll<HTMLAnchorElement>('a[data-viewer]').forEach((link) =>
+      link.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        open(link, list.dataset);
+      }),
+    );
+  });
+</script>

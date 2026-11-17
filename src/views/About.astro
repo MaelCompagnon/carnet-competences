@@ -1,0 +1,88 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../../assets/mael-portrait-recadre.png';
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Sections from '../components/Sections.astro';
+import { at, inline, loadPage, render, tableOf } from '../lib/content';
+import { onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const { doc, title, sections } = loadPage(lang, '01-qui-je-suis');
+// Sections, in order: intro, path (table), why the North, self-knowledge (4 lists), at work, languages, outside.
+const intro = at(sections, 0, doc.file);
+const path = at(sections, 1, doc.file);
+const north = at(sections, 2, doc.file);
+const self = at(sections, 3, doc.file);
+const steps = tableOf(path).rows;
+const chapter = siteData(lang).chapters.find((c) => c.id === 'about')!;
+const op = onePage(lang);
+const pastel = ['mustard', 'periwinkle', 'pink', 'lavender'];
+// Long texts: a slight tilt only, so the lines stay easy to read.
+const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
+---
+
+<Base lang={lang} id="about" title={title} description={chapter.desc} analysis>
+  <article class="page wrap">
+    <PageHead num="02" title={title} note={op.chapters[1].note} />
+
+    <section class="section" aria-labelledby={intro.id} style="margin-top:0">
+      <h2 id={intro.id} set:html={inline(intro.title)} />
+      <div class="about-intro">
+        <div class="prose" set:html={render(intro.tokens)} />
+        <figure class="polaroid">
+          <span class="tape tape--tl" aria-hidden="true"></span>
+          <Image src={portrait} alt={t.portraitAlt} width={240} height={240} widths={[240, 480]} sizes="240px" />
+          <figcaption>{op.portraitCaption}</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <div class="column">
+      <section class="section" aria-labelledby={path.id}>
+        <h2 id={path.id} set:html={inline(path.title)} />
+        <ol class="timeline">
+          {
+            steps.map(([when, what, detail]) => (
+              <li data-reveal>
+                <span class="timeline__when">{when}</span>
+                <strong class="timeline__what" set:html={inline(what)} />
+                <p class="timeline__detail" set:html={inline(detail)} />
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <Sections sections={[north]} />
+    </div>
+
+    <section class="section wide" aria-labelledby={self.id}>
+      <h2 id={self.id} set:html={inline(self.title)} />
+      <div class="prose column" set:html={render(self.tokens)} />
+      <ul class="quad">
+        {
+          self.children.map((c, i) => (
+            <li class={`postit postit--${pastel[i % 4]}`} style={`--r:${tilt[i % 4]}deg`} data-reveal>
+              <span class="tape" aria-hidden="true" />
+              <h3 id={c.id} set:html={inline(c.title)} />
+              <div class="prose" set:html={render(c.tokens)} />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <div class="column">
+      <Sections sections={sections.slice(4)} />
+    </div>
+  </article>
+</Base>

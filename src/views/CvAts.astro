@@ -1,0 +1,85 @@
+---
+// ATS CV: one column, system font, no icon, no table, no text in images,
+// standard section titles, selectable text. Kept deliberately plain.
+import Print from '../layouts/Print.astro';
+import { inline, render } from '../lib/content';
+import { cvData } from '../lib/cv';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const cv = cvData(lang);
+// The French pages use non-breaking spaces (see lib/content.ts). This file is meant to be read by
+// recruiting software, and some parsers split or drop words around them: plain spaces only here.
+const special = new RegExp('[' + String.fromCharCode(0xa0, 0x202f) + ']', 'g');
+const ats = (html: string) => html.replace(special, ' ');
+---
+
+<Print lang={lang} title={`CV · ${cv.name}`}>
+  <div class="ats">
+    <h1>{cv.name}</h1>
+    <p set:html={ats(inline(cv.title))} />
+    <p set:html={ats(inline(cv.goal))} />
+    {
+      [...cv.contacts, ...cv.links].map((c) =>
+        c.kind === 'phone' ? <p data-cv-phone hidden /> : <p>{c.kind === 'text' ? <span set:html={ats(c.html)} /> : c.text}</p>,
+      )
+    }
+    {
+      cv.sections.map((sec) => (
+        <section>
+          <h2 set:html={ats(inline(sec.title))} />
+          <div class="ats__body" set:html={ats(render(sec.tokens))} />
+        </section>
+      ))
+    }
+  </div>
+</Print>
+
+<style is:global>
+  .ats {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.4;
+  }
+
+  .ats :is(h1, h2, h3) {
+    font-family: inherit;
+    letter-spacing: 0;
+  }
+
+  .ats h1 {
+    font-size: 18pt;
+    margin-bottom: 4px;
+  }
+
+  .ats h2 {
+    margin: 14px 0 6px;
+    font-size: 12pt;
+    text-transform: uppercase;
+    break-after: avoid;
+  }
+
+  .ats__body > * + * {
+    margin-top: 6px;
+  }
+
+  .ats__body > ul + p {
+    margin-top: 10px;
+  }
+
+  .ats__body > p {
+    break-after: avoid;
+  }
+
+  .ats__body ul {
+    padding-left: 18px;
+  }
+
+  .ats__body li {
+    break-inside: avoid;
+  }
+</style>

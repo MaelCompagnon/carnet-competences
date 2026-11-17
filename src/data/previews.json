@@ -1,0 +1,357 @@
+{
+  "/cv/CV-Mael-Compagnon-EN-ATS.pdf": {
+    "pages": 2,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/cv-ats-en-p1-1200.webp",
+        "thumb": "/previews/cv-ats-en-p1-480.webp"
+      },
+      {
+        "page": 2,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/cv-ats-en-p2-1200.webp",
+        "thumb": "/previews/cv-ats-en-p2-480.webp"
+      }
+    ]
+  },
+  "/cv/CV-Mael-Compagnon-EN.pdf": {
+    "pages": 1,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/cv-en-p1-1200.webp",
+        "thumb": "/previews/cv-en-p1-480.webp"
+      }
+    ]
+  },
+  "/cv/CV-Mael-Compagnon-FR-ATS.pdf": {
+    "pages": 2,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/cv-ats-fr-p1-1200.webp",
+        "thumb": "/previews/cv-ats-fr-p1-480.webp"
+      },
+      {
+        "page": 2,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/cv-ats-fr-p2-1200.webp",
+        "thumb": "/previews/cv-ats-fr-p2-480.webp"
+      }
+    ]
+  },
+  "/cv/CV-Mael-Compagnon-FR.pdf": {
+    "pages": 1,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/cv-fr-p1-1200.webp",
+        "thumb": "/previews/cv-fr-p1-480.webp"
+      }
+    ]
+  },
+  "/documents/LEP-Mael-Compagnon.pdf": {
+    "pages": 11,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/lep-p1-1200.webp",
+        "thumb": "/previews/lep-p1-480.webp"
+      }
+    ]
+  },
+  "/documents/attestation-ant-2025-2026.pdf": {
+    "pages": 1,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/attestation-ant-p1-1200.webp",
+        "thumb": "/previews/attestation-ant-p1-480.webp"
+      }
+    ]
+  },
+  "/documents/rapport-stage-1re-annee-2024.pdf": {
+    "pages": 18,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p1-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p1-480.webp"
+      },
+      {
+        "page": 2,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p2-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p2-480.webp"
+      },
+      {
+        "page": 3,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p3-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p3-480.webp"
+      },
+      {
+        "page": 4,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p4-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p4-480.webp"
+      },
+      {
+        "page": 5,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p5-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p5-480.webp"
+      },
+      {
+        "page": 6,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p6-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p6-480.webp"
+      },
+      {
+        "page": 7,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p7-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p7-480.webp"
+      },
+      {
+        "page": 8,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p8-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p8-480.webp"
+      },
+      {
+        "page": 9,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p9-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p9-480.webp"
+      },
+      {
+        "page": 10,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p10-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p10-480.webp"
+      },
+      {
+        "page": 11,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p11-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p11-480.webp"
+      },
+      {
+        "page": 12,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p12-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p12-480.webp"
+      },
+      {
+        "page": 13,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p13-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p13-480.webp"
+      },
+      {
+        "page": 14,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p14-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p14-480.webp"
+      },
+      {
+        "page": 15,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p15-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p15-480.webp"
+      },
+      {
+        "page": 16,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p16-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p16-480.webp"
+      },
+      {
+        "page": 17,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p17-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p17-480.webp"
+      },
+      {
+        "page": 18,
+        "width": 1200,
+        "height": 1698,
+        "src": "/previews/rapport-1re-annee-p18-1200.webp",
+        "thumb": "/previews/rapport-1re-annee-p18-480.webp"
+      }
+    ]
+  },
+  "/documents/rapport-stage-salmar-2026.pdf": {
+    "pages": 19,
+    "images": [
+      {
+        "page": 1,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p1-1200.webp",
+        "thumb": "/previews/rapport-salmar-p1-480.webp"
+      },
+      {
+        "page": 2,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p2-1200.webp",
+        "thumb": "/previews/rapport-salmar-p2-480.webp"
+      },
+      {
+        "page": 3,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p3-1200.webp",
+        "thumb": "/previews/rapport-salmar-p3-480.webp"
+      },
+      {
+        "page": 4,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p4-1200.webp",
+        "thumb": "/previews/rapport-salmar-p4-480.webp"
+      },
+      {
+        "page": 5,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p5-1200.webp",
+        "thumb": "/previews/rapport-salmar-p5-480.webp"
+      },
+      {
+        "page": 6,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p6-1200.webp",
+        "thumb": "/previews/rapport-salmar-p6-480.webp"
+      },
+      {
+        "page": 7,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p7-1200.webp",
+        "thumb": "/previews/rapport-salmar-p7-480.webp"
+      },
+      {
+        "page": 8,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p8-1200.webp",
+        "thumb": "/previews/rapport-salmar-p8-480.webp"
+      },
+      {
+        "page": 9,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p9-1200.webp",
+        "thumb": "/previews/rapport-salmar-p9-480.webp"
+      },
+      {
+        "page": 10,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p10-1200.webp",
+        "thumb": "/previews/rapport-salmar-p10-480.webp"
+      },
+      {
+        "page": 11,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p11-1200.webp",
+        "thumb": "/previews/rapport-salmar-p11-480.webp"
+      },
+      {
+        "page": 12,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p12-1200.webp",
+        "thumb": "/previews/rapport-salmar-p12-480.webp"
+      },
+      {
+        "page": 13,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p13-1200.webp",
+        "thumb": "/previews/rapport-salmar-p13-480.webp"
+      },
+      {
+        "page": 14,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p14-1200.webp",
+        "thumb": "/previews/rapport-salmar-p14-480.webp"
+      },
+      {
+        "page": 15,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p15-1200.webp",
+        "thumb": "/previews/rapport-salmar-p15-480.webp"
+      },
+      {
+        "page": 16,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p16-1200.webp",
+        "thumb": "/previews/rapport-salmar-p16-480.webp"
+      },
+      {
+        "page": 17,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p17-1200.webp",
+        "thumb": "/previews/rapport-salmar-p17-480.webp"
+      },
+      {
+        "page": 18,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p18-1200.webp",
+        "thumb": "/previews/rapport-salmar-p18-480.webp"
+      },
+      {
+        "page": 19,
+        "width": 1200,
+        "height": 1697,
+        "src": "/previews/rapport-salmar-p19-1200.webp",
+        "thumb": "/previews/rapport-salmar-p19-480.webp"
+      }
+    ]
+  }
+}

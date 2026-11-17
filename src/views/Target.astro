@@ -1,0 +1,67 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Sections from '../components/Sections.astro';
+import { at, inline, loadPage, render, tableOf, withoutTables } from '../lib/content';
+import { onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const { doc, title, sections } = loadPage(lang, '06-metier-vise');
+// Sections, in order: the role, its profile (3 independent columns), the gap table, the action plan, the sources.
+const role = at(sections, 0, doc.file);
+const profile = at(sections, 1, doc.file);
+const gap = at(sections, 2, doc.file);
+const chapter = siteData(lang).chapters.find((c) => c.id === 'target')!;
+const op = onePage(lang);
+const pastel = ['periwinkle', 'pink', 'mustard'];
+const tilt = ['-0.6', '0.5', '-0.4'];
+
+// In the profile table each COLUMN is a list; rows mean nothing. Read it column by column.
+const { head, rows } = tableOf(profile);
+const columns = head.map((h, i) => ({ title: h, items: rows.map((r) => r[i]).filter((x) => x && x.trim()) }));
+---
+
+<Base lang={lang} id="target" title={title} description={chapter.desc} analysis>
+  <article class="page wrap">
+    <PageHead num="05" title={title} note={op.chapters[4].note} />
+
+    <div class="column">
+      <Sections sections={[role]} />
+    </div>
+
+    <section class="section" aria-labelledby={profile.id}>
+      <h2 id={profile.id} set:html={inline(profile.title)} />
+      <div class="prose column" set:html={render(withoutTables(profile))} />
+      <ul class="cols3">
+        {
+          columns.map((c, i) => (
+            <li class={`postit postit--${pastel[i % 3]}`} style={`--r:${tilt[i % 3]}deg`} data-reveal>
+              <span class="tape" aria-hidden="true" />
+              <h3 set:html={inline(c.title)} />
+              <ul>
+                {c.items.map((it) => (
+                  <li set:html={inline(it)} />
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="section wide" aria-labelledby={gap.id} data-reveal>
+      <h2 id={gap.id} set:html={inline(gap.title)} />
+      <div class="prose" set:html={render(gap.tokens)} />
+    </section>
+
+    <div class="column">
+      <Sections sections={sections.slice(3)} />
+    </div>
+  </article>
+</Base>

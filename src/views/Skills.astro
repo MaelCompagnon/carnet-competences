@@ -1,0 +1,62 @@
+---
+import Base from '../layouts/Base.astro';
+import Matrix from '../components/Matrix.astro';
+import PageHead from '../components/PageHead.astro';
+import Sections from '../components/Sections.astro';
+import { inline, render } from '../lib/content';
+import { skillsData } from '../lib/skills';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const { h1, title, levels, levelList, groups, summary, matrix, pills } = skillsData(lang);
+const chapter = siteData(lang).chapters.find((c) => c.id === 'skills')!;
+---
+
+<Base lang={lang} id="skills" title={title} description={chapter.desc} analysis>
+  <article class="page wrap">
+    <PageHead num="04" title={title}>
+      {h1.tokens.length > 0 && <div class="page__lead" set:html={render(h1.tokens)} />}
+    </PageHead>
+
+    <section class="section column" aria-labelledby={levels.id} data-reveal>
+      <h2 id={levels.id} set:html={inline(levels.title)} />
+      <ul class="levels">
+        {
+          levelList.map((l, i) => (
+            <li>
+              <span class={`pill pill--l${i + 1}`}>{l.name}</span>
+              <span set:html={inline(l.text)} />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="matrice">
+      <h2 id="matrice">{t.matrixTitle}</h2>
+      <Matrix lang={lang} groups={matrix} />
+    </section>
+
+    <div class="wide">
+      {
+        groups.map((g) => (
+          <section class="section" aria-labelledby={g.id} data-reveal>
+            <h2 id={g.id} set:html={inline(g.title)} />
+            <div class="prose" set:html={pills(render(g.tokens))} />
+          </section>
+        ))
+      }
+    </div>
+
+    <div class="column">
+      <Sections sections={[summary]} />
+    </div>
+  </article>
+</Base>

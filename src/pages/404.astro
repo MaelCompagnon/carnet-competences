@@ -1,0 +1,19 @@
+---
+// A static host serves one 404 page for every address, so it speaks both languages.
+import Base from '../layouts/Base.astro';
+import { href } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+---
+
+<Base lang="fr" id="home" title={ui.fr.notFoundTitle} description={ui.fr.notFoundText} noindex>
+  <div class="wrap notfound">
+    <p class="mono">404</p>
+    <h1>{ui.fr.notFoundTitle}</h1>
+    <p>{ui.fr.notFoundText}</p>
+    <a class="btn btn--primary" href={href('fr', 'home')}>{ui.fr.notFoundBack}</a>
+    <div lang="en" style="display:contents">
+      <p>{ui.en.notFoundTitle}. {ui.en.notFoundText}</p>
+      <a class="btn" href={href('en', 'home')}>{ui.en.notFoundBack}</a>
+    </div>
+  </div>
+</Base>

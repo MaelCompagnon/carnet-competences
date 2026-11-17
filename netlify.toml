@@ -1,0 +1,8 @@
+# Netlify build settings. The production build stops while a pending marker remains in
+# content/ or while the CV PDFs are older than their text (astro.config.mjs).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"

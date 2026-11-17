@@ -1,0 +1,33 @@
+---
+// Head of a detailed page: the chapter number (same square as the pins of the one-page),
+// the title, and the handwritten note of the chapter when there is one.
+import Arrow from './Arrow.astro';
+import { inline } from '../lib/content';
+
+interface Props {
+  num: string;
+  title: string;
+  note?: string;
+  /** Small mono line above the title (e.g. "Expérience 1/3"). */
+  kicker?: string;
+}
+
+const { num, title, note, kicker } = Astro.props;
+---
+
+<header class="page__head">
+  <div class="page__top">
+    <span class="pin" aria-hidden="true">{num}</span>
+    {kicker && <p class="label">{kicker}</p>}
+  </div>
+  <h1 set:html={inline(title)} />
+  {
+    note && (
+      <p class="note">
+        <Arrow dir="down" />
+        {note}
+      </p>
+    )
+  }
+  <slot />
+</header>

@@ -1,0 +1,71 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../../assets/mael-portrait-recadre.png';
+import Base from '../layouts/Base.astro';
+import DocGallery from '../components/DocGallery.astro';
+import Sections from '../components/Sections.astro';
+import { inline, loadPage } from '../lib/content';
+import { cvData } from '../lib/cv';
+import { docsOf } from '../lib/documents';
+import { onePage } from '../lib/onepage';
+import { siteData } from '../lib/site';
+import type { Lang } from '../i18n/routes';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = ui[lang];
+const cv = cvData(lang);
+const chapter = siteData(lang).chapters.find((c) => c.id === 'cv')!;
+const op = onePage(lang);
+// On the web: e-mail, LinkedIn and GitHub only. The phone slot is dropped (SPEC §5).
+const contacts = [...cv.contacts, ...cv.links].filter((c) => c.kind !== 'phone');
+// The current language first.
+const cvDocs = docsOf(lang, 'cv').sort((a, b) => Number(b.lang === lang) - Number(a.lang === lang));
+const eng = loadPage(lang, '07-engagements');
+const certs = eng.sections[eng.sections.length - 1];
+---
+
+<Base lang={lang} id="cv" title={cv.pageTitle} description={chapter.desc}>
+  <article class="page wrap cv">
+    <header class="cv-head">
+      <figure class="polaroid">
+        <Image src={portrait} alt={t.portraitAlt} width={180} height={180} widths={[180, 360]} sizes="180px" loading="eager" fetchpriority="high" />
+      </figure>
+      <div>
+        <div class="page__top">
+          <span class="pin" aria-hidden="true">08</span>
+          <p class="note">{op.chapters[7].note}</p>
+        </div>
+        <h1>{cv.name}</h1>
+        <p class="cv-head__title" set:html={inline(cv.title)} />
+        <p class="cv-head__goal" set:html={inline(cv.goal)} />
+        <ul class="cv-contact">
+          {contacts.map((c) => <li>{c.href ? <a href={c.href}>{c.text}</a> : <span set:html={c.html} />}</li>)}
+        </ul>
+      </div>
+    </header>
+
+    <section class="downloads" aria-labelledby="telecharger">
+      <h2 id="telecharger">{t.cvDownloads}</h2>
+      <DocGallery lang={lang} docs={cvDocs} level={3} />
+    </section>
+
+    <section class="downloads" aria-labelledby="attestations">
+      <h2 id="attestations" set:html={inline(certs.title)} />
+      <DocGallery lang={lang} docs={docsOf(lang, 'engagement')} level={3} />
+    </section>
+
+    <section class="downloads" aria-labelledby="rapports">
+      <h2 id="rapports">{t.docs.reports}</h2>
+      <DocGallery lang={lang} docs={docsOf(lang, 'report')} level={3} />
+    </section>
+
+    <div class="column">
+      <Sections sections={cv.sections} />
+    </div>
+  </article>
+</Base>
