@@ -2025,13 +2025,209 @@ tbody tr + tr > * {
   }
 }
 
-.about-intro .polaroid {
-  max-width: 240px;
-  --r: 2deg;
+/* ---------- The badge (About page, src/scripts/badge.ts) ----------
+   A card on a burgundy cord, pinned to the board. Without the script: the cord is a straight
+   line and both faces show, one under the other. The script adds .is-live (the faces stack and
+   turn over) and, unless motion is reduced, .has-physics (the cord follows the swinging card). */
+/* A badge pulled sideways must not be cut at the edge of the text column: on its page the
+   clipping moves from .page to <main>, which spans the whole window (the page still never
+   scrolls sideways). On the body it would not work: its overflow is passed on to the window. */
+main:has(.badge) {
+  overflow-x: clip;
 }
 
-.about-intro .polaroid figcaption {
+.page:has(.badge) {
+  overflow-x: visible;
+}
+
+.badge {
+  --cord: 96px;
+  position: relative;
+  justify-self: center;
+  width: 240px;
+  margin: 0;
+  padding-top: var(--cord);
+}
+
+.badge__pin {
+  position: absolute;
+  top: 2px;
+  left: calc(50% - 9px);
+  z-index: 3;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #c86f91 0 22%, var(--accent) 60%);
+  box-shadow: 0 3px 4px -1px rgb(27 26 31 / 0.45);
+}
+
+.badge__cord {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.badge__cord line,
+.badge__cord path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.badge__cord path {
+  display: none;
+}
+
+.badge.has-physics .badge__cord line {
+  display: none;
+}
+
+.badge.has-physics .badge__cord path {
+  display: inline;
+}
+
+.badge__card {
+  position: relative;
+  z-index: 2;
+  width: 220px;
+  margin-inline: auto;
+  transform-origin: 50% 0;
+}
+
+/* The metal clip that holds the card on the cord. */
+.badge__clip {
+  position: absolute;
+  top: -10px;
+  left: calc(50% - 11px);
+  z-index: 1;
+  width: 22px;
+  height: 16px;
+  border: 2px solid #8f877c;
+  border-radius: 5px 5px 3px 3px;
+  background: #d9d5ce;
+}
+
+.badge__face {
+  padding: 14px 12px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow-paper);
+}
+
+.badge__face img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.badge__name {
+  margin: 10px 0 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+  color: var(--ink);
+}
+
+.badge__face--back {
+  margin-top: 14px;
+  background: var(--pink);
+  border-color: transparent;
+}
+
+.badge__label {
+  margin: 0;
+  color: var(--ink);
+}
+
+.badge__egg {
+  margin: 8px 0 0;
+  font-family: var(--font-hand);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.badge figcaption {
+  margin-top: 14px;
+  font-family: var(--font-hand);
   font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ink);
+}
+
+.badge__hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media screen {
+  .badge.is-live .badge__card {
+    cursor: pointer;
+    perspective: 900px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .badge.has-physics .badge__card {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .badge.is-dragging .badge__card {
+    cursor: grabbing;
+  }
+
+  .badge.is-live .badge__card:focus-visible {
+    outline-offset: 6px;
+    border-radius: var(--radius);
+  }
+
+  /* The two faces share one place and turn over together. */
+  .badge.is-live .badge__flip {
+    display: grid;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.3, 1.35, 0.5, 1);
+  }
+
+  .badge.is-live .badge__face {
+    grid-area: 1 / 1;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .badge.is-live .badge__face--back {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 0;
+    transform: rotateY(180deg);
+  }
+
+  .badge.is-live.is-flipped .badge__flip {
+    transform: rotateY(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge .badge__flip {
+    transition: none;
+  }
 }
 
 .timeline {

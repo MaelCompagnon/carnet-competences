@@ -25,6 +25,7 @@ const self = at(sections, 3, doc.file);
 const steps = tableOf(path).rows;
 const chapter = siteData(lang).chapters.find((c) => c.id === 'about')!;
 const op = onePage(lang);
+const site = siteData(lang);
 const pastel = ['mustard', 'periwinkle', 'pink', 'lavender'];
 // Long texts: a slight tilt only, so the lines stay easy to read.
 const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
@@ -38,10 +39,28 @@ const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
       <h2 id={intro.id} set:html={inline(intro.title)} />
       <div class="about-intro">
         <div class="prose" set:html={render(intro.tokens)} />
-        <figure class="polaroid">
-          <span class="tape tape--tl" aria-hidden="true"></span>
-          <Image src={portrait} alt={t.portraitAlt} width={240} height={240} widths={[240, 480]} sizes="240px" />
+        <figure class="badge" data-badge>
+          <span class="badge__pin" aria-hidden="true"></span>
+          <svg class="badge__cord" aria-hidden="true" focusable="false">
+            <!-- Ends on the clip of the card: keep y2 in step with --cord (global.css). -->
+            <line x1="50%" y1="11" x2="50%" y2="90" data-badge-line />
+            <path data-badge-path />
+          </svg>
+          <div class="badge__card" data-badge-card data-label={t.badge.flip}>
+            <span class="badge__clip" aria-hidden="true"></span>
+            <div class="badge__flip">
+              <div class="badge__face badge__face--front">
+                <Image src={portrait} alt={t.portraitAlt} width={196} height={196} widths={[196, 392]} sizes="196px" draggable="false" />
+                <p class="badge__name">{site.name}</p>
+              </div>
+              <div class="badge__face badge__face--back" id="badge-back">
+                <p class="label badge__label">{t.badge.back}</p>
+                <p class="badge__egg" set:html={inline(op.badgeBack)} />
+              </div>
+            </div>
+          </div>
           <figcaption>{op.portraitCaption}</figcaption>
+          <p class="label badge__hint" data-badge-hint data-still={t.badge.hintStill} hidden>{t.badge.hint}</p>
         </figure>
       </div>
     </section>
@@ -86,3 +105,9 @@ const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
     </div>
   </article>
 </Base>
+
+<script>
+  import { initBadge } from '../scripts/badge';
+
+  initBadge();
+</script>

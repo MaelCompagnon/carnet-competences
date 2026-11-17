@@ -20,6 +20,8 @@ route: /
 
 **Highlighted words:** robotics · computer vision · a team of 22 people
 
+**Back of the badge:** There is always something to find on the back: WELL DONE! You have found an intern for summer 2027.
+
 **Link:** Read "Who I am" in full
 
 # Experience

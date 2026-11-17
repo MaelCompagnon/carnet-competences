@@ -18,6 +18,12 @@ export const ui = {
     allExperiences: 'Toutes les expériences',
     junctionPhotoAlt: "Maël Compagnon à Junction 2026, devant l'affiche « The European Tech Renaissance ».",
     portraitAlt: 'Portrait de Maël Compagnon',
+    badge: {
+      flip: 'Retourner le badge',
+      back: 'Au dos',
+      hint: 'Attrapez le badge et tirez, ou cliquez pour le retourner',
+      hintStill: 'Cliquez sur le badge pour le retourner',
+    },
     matrixTitle: 'Matrice compétences × preuves',
     matrixHint:
       'Sélectionnez une compétence pour voir ses preuves, ou une expérience pour voir les compétences qu’elle a développées.',
@@ -79,6 +85,12 @@ export const ui = {
     allExperiences: 'All experiences',
     junctionPhotoAlt: 'Maël Compagnon at Junction 2026, in front of the poster "The European Tech Renaissance".',
     portraitAlt: 'Portrait of Maël Compagnon',
+    badge: {
+      flip: 'Flip the badge',
+      back: 'On the back',
+      hint: 'Grab the badge and pull, or click to flip it',
+      hintStill: 'Click the badge to flip it',
+    },
     matrixTitle: 'Skills × evidence matrix',
     matrixHint: 'Select a skill to see its evidence, or an experience to see the skills it developed.',
     matrixRegion: 'Skills matrix, scrollable horizontally',

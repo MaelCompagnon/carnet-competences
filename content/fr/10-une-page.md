@@ -20,6 +20,8 @@ route: /
 
 **Mots surlignés :** la robotique · la vision par ordinateur · une équipe de 22 personnes
 
+**Verso du badge :** Au dos, il y a toujours quelque chose à trouver : BRAVO ! Vous avez trouvé un stagiaire pour l'été 2027.
+
 **Lien :** Lire « Qui je suis » en entier
 
 # Expériences

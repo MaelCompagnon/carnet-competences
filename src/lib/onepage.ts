@@ -34,6 +34,8 @@ export function onePage(lang: Lang) {
 
   const home = fields(at(doc.top, 0, doc.file));
   const about = fields(at(doc.top, 1, doc.file));
+  // Chapter 02: annotation, highlighted words, back of the badge (/qui-je-suis), link.
+  if (about.length !== 4) throw new Error(`[content] ${doc.file} › chapter 02 must have 4 lines, found ${about.length}`);
   const exp = fields(at(doc.top, 2, doc.file));
   // "révisions · Nemotron · Gemini · humain": the steps of TimeProof, drawn as pills.
   // A pending note in the line is kept apart, so that a draft still shows it.
@@ -52,6 +54,8 @@ export function onePage(lang: Lang) {
     statsNote: at(home, 2, doc.file).value,
     heroWords: splitDot(at(home, 3, doc.file).value),
     aboutWords: splitDot(at(about, 1, doc.file).value),
+    /** Easter egg on the back of the badge (About page). Kept as inline Markdown: a pending note stays visible in drafts. */
+    badgeBack: at(about, 2, doc.file).value,
     diagram: splitDot(diagramRaw.replace(MARKER_RE, '').trim()),
     diagramPending: [...diagramRaw.matchAll(MARKER_RE)].map((m) => m[0]),
   };
