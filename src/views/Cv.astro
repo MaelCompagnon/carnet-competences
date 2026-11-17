@@ -31,14 +31,16 @@ const certs = eng.sections[eng.sections.length - 1];
 <Base lang={lang} id="cv" title={cv.pageTitle} description={chapter.desc}>
   <article class="page wrap cv">
     <header class="cv-head">
+      {/* The pin first, above the portrait, as on every detailed page: the thread leaves it by
+          its left side and runs down the margin, left of the portrait and of every title. */}
+      <div class="page__top cv-head__top">
+        <span class="pin" data-pin aria-hidden="true">08</span>
+        <p class="note">{op.chapters[7].note}</p>
+      </div>
       <figure class="polaroid">
         <Image src={portrait} alt={t.portraitAlt} width={180} height={180} widths={[180, 360]} sizes="180px" loading="eager" fetchpriority="high" />
       </figure>
       <div>
-        <div class="page__top">
-          <span class="pin" data-pin aria-hidden="true">08</span>
-          <p class="note">{op.chapters[7].note}</p>
-        </div>
         <h1>{cv.name}</h1>
         <p class="cv-head__title" set:html={inline(cv.title)} />
         <p class="cv-head__goal" set:html={inline(cv.goal)} />
