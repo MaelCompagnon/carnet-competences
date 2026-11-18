@@ -58,4 +58,4 @@ Three lessons: delivering in 48 hours forces you to focus on the essentials, a g
 
 This is my first complete AI engineering experience: choosing a model, making it work on real, multimodal data, measuring its reliability and framing its limits. The fact that NVIDIA rewarded our use of Nemotron strengthens my wish to work on models that perceive the world, and not only text.
 
-**Evidence:** [TimeProof code on GitHub](https://github.com/LeopoldPichonneau/Junction2026) · [LinkedIn post, with the demo video](https://www.linkedin.com/feed/update/urn:li:activity:7528098898842877952/)
+**Evidence:** [TimeProof code on GitHub](https://github.com/MaelCompagnon/TimeProof) · [LinkedIn post, with the demo video](https://www.linkedin.com/feed/update/urn:li:activity:7528098898842877952/)

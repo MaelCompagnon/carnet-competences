@@ -58,4 +58,4 @@ Trois leçons : livrer en 48 heures oblige à se concentrer sur l'essentiel, une
 
 C'est ma première expérience complète d'ingénierie IA : choisir un modèle, le faire travailler sur des données réelles et multimodales, mesurer sa fiabilité et en encadrer les limites. Le fait que NVIDIA ait récompensé notre usage de Nemotron me conforte dans l'envie de travailler sur des modèles qui perçoivent le monde, et pas seulement du texte.
 
-**Preuves :** [Code de TimeProof sur GitHub](https://github.com/LeopoldPichonneau/Junction2026) · [Post LinkedIn, avec la vidéo de démonstration](https://www.linkedin.com/feed/update/urn:li:activity:7528098898842877952/)
+**Preuves :** [Code de TimeProof sur GitHub](https://github.com/MaelCompagnon/TimeProof) · [Post LinkedIn, avec la vidéo de démonstration](https://www.linkedin.com/feed/update/urn:li:activity:7528098898842877952/)
