@@ -1,17 +1,19 @@
-// Soft, irregular shapes in the background ("ectoplasms"): very pale pastel blobs with blurred
-// edges that slowly change shape, and drift a little aside when the mouse passes. They may lie
-// under the text: they are pale enough that every measured contrast stays above AA.
+// Soft, irregular shapes in the background ("ectoplasms"): crisp blobs a shade lighter than the
+// paper, tone on tone, that slowly change shape. Where the mouse touches an edge, the edge gives
+// way and wobbles back like jelly. They may lie under the text: a lighter background only raises
+// the contrast of the dark text on it.
 //
 // Placed at build time from a seeded sequence, so a page looks the same on every visit, and
 // drawn in their first shape by HTML + CSS alone (no script, "reduce motion"). The script
-// (src/scripts/blobs.ts) only makes them change shape and move.
+// (src/scripts/blobs.ts) only makes them change shape and react.
 
-const COLORS = ['mustard', 'periwinkle', 'pink', 'lavender', 'sage'];
-/** Points around a blob: few enough to stay round and soft. */
-export const BLOB_POINTS = 8;
+/** Three shades, all a little lighter than the paper (global.css, .blob--a to c). */
+const SHADES = ['a', 'b', 'c'];
+/** Points around a blob: enough for the edge to dent locally, few enough to stay smooth. */
+export const BLOB_POINTS = 18;
 
 export interface Blob {
-  color: string;
+  shade: string;
   style: string;
   /** Initial outline, in a unit circle. */
   d: string;
@@ -26,15 +28,20 @@ function seeded(seed: number) {
   return () => (s = (s * 9301 + 49297) % 233280) / 233280;
 }
 
-/**
- * Outline of a blob at time t, as a closed smooth path in a unit circle. Shared with the
- * script, so that the first frame it draws is the shape the HTML already shows.
- */
-export function blobPath(phases: number[], speed: number, t: number): string {
+/** Radius of point k at time t, around 1: the slow change of shape. */
+export function blobRadius(phases: number[], speed: number, k: number, t: number): number {
   const n = phases.length;
-  const pts = phases.map((ph, k) => {
+  return 1 + 0.1 * Math.sin(t * 0.35 * speed + phases[k]) + 0.05 * Math.sin(t * 0.6 * speed + phases[(k + 5) % n]);
+}
+
+/**
+ * Closed smooth outline in a unit circle, through the radii given for each point (Catmull-Rom
+ * as cubic curves). Shared with the script, so its first frame is the shape the HTML shows.
+ */
+export function outline(radii: number[]): string {
+  const n = radii.length;
+  const pts = radii.map((r, k) => {
     const a = (k / n) * Math.PI * 2;
-    const r = 1 + 0.17 * Math.sin(t * speed + ph) + 0.08 * Math.sin(t * speed * 1.9 + phases[(k + 3) % n]);
     return [Math.cos(a) * r, Math.sin(a) * r];
   });
   const f = (v: number) => v.toFixed(3);
@@ -56,20 +63,17 @@ export function blobPath(phases: number[], speed: number, t: number): string {
  */
 export function blobs(seed: number, count: number): Blob[] {
   const rand = seeded(seed);
-  let lastColor = '';
   return Array.from({ length: count }, (_, i) => {
-    let color = COLORS[Math.floor(rand() * COLORS.length)];
-    if (color === lastColor) color = COLORS[(COLORS.indexOf(color) + 2) % COLORS.length];
-    lastColor = color;
+    const shade = SHADES[i % SHADES.length];
     const top = ((i + 0.2 + rand() * 0.6) / count) * 100;
     const side = i % 2 === 0 ? rand() * 0.45 : 0.55 + rand() * 0.45;
     const r = Math.round(110 + rand() * 130);
     const phases = Array.from({ length: BLOB_POINTS }, () => Number((rand() * 6.283).toFixed(2)));
-    const speed = Number((0.22 + rand() * 0.22).toFixed(3));
+    const speed = Number((0.8 + rand() * 0.5).toFixed(3));
     return {
-      color,
+      shade,
       style: `top:${top.toFixed(1)}%;left:${(side * 100).toFixed(1)}%;--r:${r}px`,
-      d: blobPath(phases, speed, 0),
+      d: outline(phases.map((_, k) => blobRadius(phases, speed, k, 0))),
       phases: phases.join(' '),
       speed: String(speed),
     };

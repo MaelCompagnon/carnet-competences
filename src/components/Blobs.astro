@@ -1,7 +1,7 @@
 ---
 // A layer of soft blobs (src/lib/blobs.ts) behind the whole page. Decoration only: hidden from
 // assistive technologies, never in the way of the mouse, without any effect on the layout.
-// src/scripts/blobs.ts makes them change shape and step aside from the mouse.
+// src/scripts/blobs.ts makes them change shape, and wobble where the mouse touches them.
 import { blobs } from '../lib/blobs';
 
 interface Props {
@@ -16,7 +16,7 @@ const list = blobs(seed, count);
 <div class="blobs" aria-hidden="true">
   {
     list.map((b) => (
-      <svg class={`blob blob--${b.color}`} style={b.style} viewBox="-1.4 -1.4 2.8 2.8" focusable="false" data-blob data-phases={b.phases} data-speed={b.speed}>
+      <svg class={`blob blob--${b.shade}`} style={b.style} viewBox="-1.4 -1.4 2.8 2.8" focusable="false" data-blob data-phases={b.phases} data-speed={b.speed}>
         <path d={b.d} />
       </svg>
     ))

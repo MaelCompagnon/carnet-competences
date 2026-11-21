@@ -3148,11 +3148,11 @@ html.lenis {
 }
 
 /* ---------- Background blobs (src/lib/blobs.ts, src/scripts/blobs.ts) ----------
-   Very pale pastel shapes with blurred edges, behind everything (even the text: contrast
-   measured, still AA). Drawn by HTML and CSS alone (still without the script or with
-   "reduce motion"); the script changes their outline and moves them with the standalone
-   translate property. The layer never affects the layout and clips them at its edges (no
-   sideways scroll). Smaller on a phone. */
+   Crisp shapes a shade lighter than the paper, tone on tone, behind everything (even the
+   text: a lighter background only raises its contrast). Drawn by HTML and CSS alone (still
+   without the script or with "reduce motion"); the script changes their outline and moves
+   them with the standalone translate property. The layer never affects the layout and clips
+   them at its edges (no sideways scroll). Smaller on a phone. */
 .has-blobs {
   position: relative;
 }
@@ -3173,28 +3173,18 @@ html.lenis {
   height: calc(var(--r) * 2.8 * var(--k));
   margin: calc(var(--r) * -1.4 * var(--k)) 0 0 calc(var(--r) * -1.4 * var(--k));
   overflow: visible;
-  opacity: 0.2;
-  filter: blur(calc(var(--r) * 0.14 * var(--k)));
 }
 
-.blob--mustard {
-  fill: var(--mustard);
+.blob--a {
+  fill: #f2efe9;
 }
 
-.blob--periwinkle {
-  fill: var(--periwinkle);
+.blob--b {
+  fill: #f0ece4;
 }
 
-.blob--pink {
-  fill: var(--pink);
-}
-
-.blob--lavender {
-  fill: var(--lavender);
-}
-
-.blob--sage {
-  fill: var(--sage);
+.blob--c {
+  fill: #f3f0ea;
 }
 
 @media (max-width: 700px) {
