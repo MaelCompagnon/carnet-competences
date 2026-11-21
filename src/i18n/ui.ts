@@ -23,6 +23,11 @@ export const ui = {
     badge: {
       flip: 'Retourner le badge',
       back: 'Au dos',
+      // Easter egg: the cord breaks when it is kept too taut (src/scripts/badge.ts).
+      oops: 'Oups…',
+      rehang: 'Raccrocher le badge',
+      broken: 'Le cordon a cassé',
+      rehung: 'Badge raccroché',
     },
     matrixTitle: 'Matrice compétences × preuves',
     matrixHint:
@@ -89,6 +94,10 @@ export const ui = {
     badge: {
       flip: 'Flip the badge',
       back: 'On the back',
+      oops: 'Oops…',
+      rehang: 'Hang the badge back up',
+      broken: 'The cord broke',
+      rehung: 'Badge hung back up',
     },
     matrixTitle: 'Skills × evidence matrix',
     matrixHint: 'Select a skill to see its evidence, or an experience to see the skills it developed.',

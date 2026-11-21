@@ -61,3 +61,7 @@ route: /
 **Annotation :** à lire ici, ou à télécharger
 
 **Lien :** Ouvrir le CV et les documents
+
+# Fin du fil
+
+**Remerciement :** merci · d'avoir regardé

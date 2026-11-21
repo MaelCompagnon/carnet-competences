@@ -28,7 +28,7 @@ const eng = loadPage(lang, '07-engagements');
 const certs = eng.sections[eng.sections.length - 1];
 ---
 
-<Base lang={lang} id="cv" title={cv.pageTitle} description={chapter.desc}>
+<Base lang={lang} id="cv" title={cv.pageTitle} description={chapter.desc} blobs={{ seed: 8, count: 3 }}>
   <article class="page wrap cv">
     <header class="cv-head">
       {/* The pin first, above the portrait, as on every detailed page: the thread leaves it by

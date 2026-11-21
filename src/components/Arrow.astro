@@ -3,12 +3,12 @@
 // so arrows are drawn: a fallback system glyph would break the handwritten look.
 // Decorative: the text next to it carries the meaning.
 interface Props {
-  dir?: 'left' | 'right' | 'down';
+  dir?: 'left' | 'right' | 'down' | 'up';
   class?: string;
 }
 
 const { dir = 'left', class: cls } = Astro.props;
-const rotate = { left: 0, right: 180, down: 270 }[dir];
+const rotate = { left: 0, right: 180, down: 270, up: 90 }[dir];
 ---
 
 <svg

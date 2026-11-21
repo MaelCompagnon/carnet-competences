@@ -20,6 +20,7 @@ import { skillsData } from '../lib/skills';
 import { siteData } from '../lib/site';
 import { href, type Lang, type RouteId } from '../i18n/routes';
 import { ui } from '../i18n/ui';
+import { threadInk } from '../lib/thread-ink';
 
 interface Props {
   lang: Lang;
@@ -81,9 +82,12 @@ const gained = at(eng.sections, 3, eng.doc.file);
 const time = at(eng.sections, 4, eng.doc.file);
 const certs = at(eng.sections, 5, eng.doc.file);
 const gainedRows = tableOf(gained).rows;
+
+// End of the thread: the knot and the word, hanging from the column of the chapter pins (x 21).
+const ink = threadInk(op.end.word, 21);
 ---
 
-<Base lang={lang} id="home">
+<Base lang={lang} id="home" blobs={{ seed: 1, count: 16 }}>
   <div class="onepage" data-onepage>
     <svg class="thread" aria-hidden="true" focusable="false"><path class="thread__path" d=""></path></svg>
 
@@ -380,6 +384,24 @@ const gainedRows = tableOf(gained).rows;
         <p class="chapter__more"><a class="btn" href={chapter(7).href}>{chapter(7).link}<Arrow dir="right" /></a></p>
       </div>
     </section>
+
+    <!-- End of the thread: it ties a knot, then writes a word, and the rest of the sentence
+         appears in handwriting. thread.ts sets .is-armed, then .is-plugged and .is-landing;
+         without the script (or with "reduce motion") everything is simply drawn. -->
+    <div class="thread-end" data-thread-end>
+      <div class="wrap">
+        <div class="thread-end__art" style={`--word-x:${ink.start}px;--end-x:${ink.end.x}px;--end-y:${ink.end.y}px`}>
+          <span class="thread-end__tie" data-thread-end-pin aria-hidden="true"></span>
+          <svg class="thread-end__ink" width={ink.width} height={ink.height} viewBox={`0 0 ${ink.width} ${ink.height}`} aria-hidden="true" focusable="false">
+            <path class="thread-end__knot" pathLength="1" d={ink.knot} />
+            <path class="thread-end__word" pathLength="1" d={ink.word} />
+            <path class="thread-end__marks" pathLength="1" d={ink.marks} />
+          </svg>
+          <p class="thread-end__thanks"><span class="sr-only">{op.end.word} </span><span>{op.end.rest}</span></p>
+        </div>
+        {op.end.pending.length > 0 && <p>{op.end.pending.map((m) => <mark class="marker">{m}</mark>)}</p>}
+      </div>
+    </div>
   </div>
 </Base>
 

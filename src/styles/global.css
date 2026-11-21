@@ -593,6 +593,7 @@ a.card:hover {
   background: var(--lavender);
 }
 
+
 .postit__label {
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -807,6 +808,122 @@ a.card:hover {
 
 .op-pending {
   padding-top: 16px;
+}
+
+/* ---------- End of the thread: a knot, then a word written with the thread ----------
+   Drawn as it is by default (no script, "reduce motion", print). thread.ts adds .is-armed (the
+   knot and the word wait, undrawn) only while they are below the screen, then .is-plugged and
+   .is-landing when the whole thread is drawn: the knot ties, the word is written, and the rest
+   of the sentence appears in handwriting. */
+.thread-end {
+  position: relative;
+  padding: clamp(64px, 9vw, 120px) 0 clamp(64px, 8vw, 110px);
+}
+
+/* The art hangs from the column of the chapter pins: the knot starts 21 px from its left edge. */
+.thread-end__art {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+}
+
+.thread-end__tie {
+  position: absolute;
+  left: 21px;
+  top: 0;
+}
+
+.thread-end__ink {
+  display: block;
+  overflow: visible;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.thread-end__ink path {
+  stroke-dasharray: 1 1;
+}
+
+.thread-end__thanks {
+  margin: 6px 0 0 var(--word-x);
+  font-family: var(--font-hand);
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+/* Wide enough: the end of the sentence follows the word, on its baseline. */
+@media (min-width: 640px) {
+  .thread-end__thanks {
+    position: absolute;
+    left: calc(var(--end-x) + 14px);
+    top: calc(var(--end-y) - 0.95em);
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
+/* Without the script: the straight line stops where the knot starts (a strip of paper hides the rest). */
+.onepage:not(.has-thread) .thread-end::after {
+  content: '';
+  position: absolute;
+  top: clamp(64px, 9vw, 120px);
+  bottom: 0;
+  left: max(10px, calc(max(0px, (100% - var(--wrap)) / 2) + var(--gutter) - 28px));
+  width: 2.6px;
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .thread-end.is-armed .thread-end__ink path {
+    stroke-dashoffset: 1;
+  }
+
+  .thread-end.is-armed .thread-end__thanks {
+    opacity: 0;
+  }
+
+  .thread-end.is-landing .thread-end__knot {
+    animation: ink-draw 1.6s cubic-bezier(0.45, 0, 0.4, 1) both;
+  }
+
+  .thread-end.is-landing .thread-end__word {
+    animation: ink-draw 2.2s 1.6s cubic-bezier(0.4, 0, 0.35, 1) both;
+  }
+
+  .thread-end.is-landing .thread-end__marks {
+    animation: ink-draw 0.3s 3.9s ease-out both;
+  }
+
+  .thread-end.is-landing .thread-end__thanks {
+    animation: ink-hand 1.1s 4.2s ease-out both;
+  }
+}
+
+@keyframes ink-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Written from left to right. The insets reach past the box: Caveat letters overhang it. */
+@keyframes ink-hand {
+  from {
+    opacity: 0;
+    clip-path: inset(-0.4em 100% -0.4em -0.4em);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-0.4em -0.6em -0.4em -0.4em);
+  }
 }
 
 .chapter {
@@ -1175,6 +1292,15 @@ a.card:hover {
   .onepage:not(.has-thread)::before {
     left: calc(var(--gutter) + 13px);
   }
+
+  /* The knot hangs in the margin, under the chapter pins. */
+  .thread-end__art {
+    margin-left: -44px;
+  }
+
+  .onepage:not(.has-thread) .thread-end::after {
+    left: calc(var(--gutter) + 13px);
+  }
 }
 
 @media (max-width: 620px) {
@@ -1207,6 +1333,7 @@ a.card:hover {
   .thread,
   .toc,
   .onepage::before,
+  .thread-end::after,
   .thread-host::before {
     display: none !important;
   }
@@ -2226,6 +2353,66 @@ main:has(.badge) {
   display: inline;
 }
 
+/* The strands and fibres of a fraying cord (drawn by the script only). */
+.badge__cord .badge__fray path {
+  stroke-width: 1.3;
+}
+
+/* Easter egg: the cord broke. While the card falls and comes back, <main> clips it in both
+   directions, so it never makes the page longer or wider. */
+main:has(.badge.is-broken) {
+  overflow: clip;
+}
+
+/* "Oops…" and the button, under the pin, where the card was (absolute: the layout never moves). */
+.badge__oops {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: min(260px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.badge__oops[hidden] {
+  display: none;
+}
+
+.badge__oops-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--accent);
+}
+
+/* The drawn arrow points up at the stub of cord (rotated: give it room above and below). */
+.badge__oops-note .arrow {
+  margin: 0.35em 0 0.3em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .badge__oops:not([hidden]) {
+    animation: oops-in 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  }
+}
+
+@keyframes oops-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) rotate(-3deg);
+  }
+}
+
 .badge__card {
   position: relative;
   z-index: 2;
@@ -2316,6 +2503,11 @@ main:has(.badge) {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .badge.is-broken .badge__card {
+    cursor: default;
   }
 
   .badge.is-dragging .badge__card {
@@ -2953,4 +3145,66 @@ html.lenis {
 /* Components set their own display: make sure the hidden attribute always wins. */
 [hidden] {
   display: none !important;
+}
+
+/* ---------- Background blobs (src/lib/blobs.ts, src/scripts/blobs.ts) ----------
+   Very pale pastel shapes with blurred edges, behind everything (even the text: contrast
+   measured, still AA). Drawn by HTML and CSS alone (still without the script or with
+   "reduce motion"); the script changes their outline and moves them with the standalone
+   translate property. The layer never affects the layout and clips them at its edges (no
+   sideways scroll). Smaller on a phone. */
+.has-blobs {
+  position: relative;
+}
+
+.blobs {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: clip;
+  pointer-events: none;
+  contain: strict;
+}
+
+.blob {
+  --k: 1;
+  position: absolute;
+  width: calc(var(--r) * 2.8 * var(--k));
+  height: calc(var(--r) * 2.8 * var(--k));
+  margin: calc(var(--r) * -1.4 * var(--k)) 0 0 calc(var(--r) * -1.4 * var(--k));
+  overflow: visible;
+  opacity: 0.2;
+  filter: blur(calc(var(--r) * 0.14 * var(--k)));
+}
+
+.blob--mustard {
+  fill: var(--mustard);
+}
+
+.blob--periwinkle {
+  fill: var(--periwinkle);
+}
+
+.blob--pink {
+  fill: var(--pink);
+}
+
+.blob--lavender {
+  fill: var(--lavender);
+}
+
+.blob--sage {
+  fill: var(--sage);
+}
+
+@media (max-width: 700px) {
+  .blob {
+    --k: 0.6;
+  }
+}
+
+@media print {
+  .blobs {
+    display: none !important;
+  }
 }

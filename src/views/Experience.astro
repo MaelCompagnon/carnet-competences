@@ -37,7 +37,7 @@ const raw = fs.readFileSync(`content/${lang}/${route(id).file}.md`, 'utf8');
 const reports = docsOf(lang, 'report').filter((d) => raw.includes(d.file));
 ---
 
-<Base lang={lang} id={id} title={title} description={`${plain(title)} · ${plain(type.value)}`} analysis>
+<Base lang={lang} id={id} title={title} description={`${plain(title)} · ${plain(type.value)}`} analysis blobs={{ seed: 9, count: 5 }}>
   <article class="page wrap">
     <PageHead num="03" title={title} kicker={`${t.experience} ${index + 1}/${experienceIds.length}`} />
 

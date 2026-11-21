@@ -21,6 +21,7 @@ import { ui } from '../i18n/ui';
 import { profile } from '../data/profile';
 import { inline, plain } from '../lib/content';
 import { siteData } from '../lib/site';
+import Blobs from '../components/Blobs.astro';
 
 interface Props {
   lang: Lang;
@@ -32,9 +33,11 @@ interface Props {
   analysis?: boolean;
   /** Pages that search engines should leave out (the 404 page). */
   noindex?: boolean;
+  /** Soft blobs in the background (Blobs.astro): a seed and how many, from top to bottom. */
+  blobs?: { seed: number; count: number };
 }
 
-const { lang, id, title, description, analysis = false, noindex = false } = Astro.props;
+const { lang, id, title, description, analysis = false, noindex = false, blobs } = Astro.props;
 const t = ui[lang];
 const site = siteData(lang);
 const fullTitle = title ? `${plain(title)} · ${profile.name}` : site.seoTitle;
@@ -113,7 +116,8 @@ const updated = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { dat
       </div>
     </header>
 
-    <main id="contenu" tabindex="-1" class:list={[id !== 'home' && 'thread-host']} data-thread={id !== 'home' ? '' : undefined}>
+    <main id="contenu" tabindex="-1" class:list={[id !== 'home' && 'thread-host', blobs && 'has-blobs']} data-thread={id !== 'home' ? '' : undefined}>
+      {blobs && <Blobs seed={blobs.seed} count={blobs.count} />}
       {/* The thread of the detailed pages (src/scripts/thread.ts); the one-page draws its own. */}
       {id !== 'home' && <svg class="thread" aria-hidden="true" focusable="false"><path class="thread__path" d="" /></svg>}
       <slot />
@@ -170,7 +174,11 @@ const updated = new Intl.DateTimeFormat(lang === 'fr' ? 'fr-FR' : 'en-GB', { dat
       // Smooth scroll and scroll animations are an extra: skipped entirely with "reduce motion",
       // and started once the page is loaded and the browser is idle, so they never delay reading.
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const start = () => import('../scripts/motion').then((m) => m.initMotion()).catch(() => {});
+        const start = () => {
+          import('../scripts/motion').then((m) => m.initMotion()).catch(() => {});
+          // The background blobs change shape and step aside from the mouse (a small script, no library).
+          if (document.querySelector('[data-blob]')) import('../scripts/blobs').then((m) => m.initBlobs()).catch(() => {});
+        };
         const whenIdle = () => ('requestIdleCallback' in window ? requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 200));
         if (document.readyState === 'complete') whenIdle();
         else window.addEventListener('load', whenIdle, { once: true });

@@ -23,14 +23,19 @@ function fields(s: Section) {
 
 export function onePage(lang: Lang) {
   const doc = loadDoc(lang, FILE);
-  const chapters: Chapter[] = doc.top.map((s) => {
+  // Eight chapters, then the end of the thread (the contact post-it under chapter 08).
+  if (doc.top.length !== 9) throw new Error(`[content] ${doc.file} must have 8 chapters and the end of the thread, found ${doc.top.length} sections`);
+  const chapters: Chapter[] = doc.top.slice(0, 8).map((s) => {
     const f = fields(s);
     const note = at(f, 0, s.where).value;
     // Chapter 01 has no link; every other chapter ends with one.
     const last = f[f.length - 1];
     return { title: s.title, note, link: s === doc.top[0] ? undefined : last?.value };
   });
-  if (chapters.length !== 8) throw new Error(`[content] ${doc.file} must have 8 chapters, found ${chapters.length}`);
+  // End of the thread: "word · rest". The thread writes the word (src/lib/thread-ink.ts),
+  // the rest of the sentence comes in handwriting.
+  const endRaw = at(fields(at(doc.top, 8, doc.file)), 0, doc.file).value;
+  const [endWord, ...endRest] = splitDot(endRaw.replace(MARKER_RE, '').trim());
 
   const home = fields(at(doc.top, 0, doc.file));
   const about = fields(at(doc.top, 1, doc.file));
@@ -58,6 +63,12 @@ export function onePage(lang: Lang) {
     badgeBack: at(about, 2, doc.file).value,
     diagram: splitDot(diagramRaw.replace(MARKER_RE, '').trim()),
     diagramPending: [...diagramRaw.matchAll(MARKER_RE)].map((m) => m[0]),
+    /** Where the thread ends: the word it writes, then the rest. A pending note is kept apart, as for the diagram. */
+    end: {
+      word: endWord.toLowerCase(),
+      rest: endRest.join(' '),
+      pending: [...endRaw.matchAll(MARKER_RE)].map((m) => m[0]),
+    },
   };
 }
 

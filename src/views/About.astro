@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import portrait from '../../assets/mael-portrait-recadre.png';
 import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
 import PageHead from '../components/PageHead.astro';
 import Sections from '../components/Sections.astro';
 import { at, inline, loadPage, render, tableOf } from '../lib/content';
@@ -31,7 +32,7 @@ const pastel = ['mustard', 'periwinkle', 'pink', 'lavender'];
 const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
 ---
 
-<Base lang={lang} id="about" title={title} description={chapter.desc} analysis>
+<Base lang={lang} id="about" title={title} description={chapter.desc} analysis blobs={{ seed: 2, count: 6 }}>
   <article class="page wrap">
     <PageHead num="02" title={title} note={op.chapters[1].note} />
 
@@ -60,6 +61,12 @@ const tilt = ['-0.5', '0.4', '0.5', '-0.4'];
             </div>
           </div>
           <figcaption>{op.portraitCaption}</figcaption>
+          {/* Easter egg (badge.ts): shown only once the cord has broken and the card has fallen. */}
+          <div class="badge__oops" data-badge-oops hidden>
+            <p class="badge__oops-note"><Arrow dir="up" />{t.badge.oops}</p>
+            <button type="button" class="btn btn--small" data-badge-rehang>{t.badge.rehang}</button>
+          </div>
+          <p class="sr-only" aria-live="polite" data-badge-live data-broken={t.badge.broken} data-rehung={t.badge.rehung}></p>
         </figure>
       </div>
     </section>

@@ -24,7 +24,7 @@ const certs = sections[sections.length - 1];
 const certsIntro = withoutTables(certs).filter((x) => x.type !== 'list');
 ---
 
-<Base lang={lang} id="engagements" title={title} description={chapter.desc} analysis>
+<Base lang={lang} id="engagements" title={title} description={chapter.desc} analysis blobs={{ seed: 6, count: 5 }}>
   <article class="page wrap">
     <PageHead num="06" title={title} note={op.chapters[5].note} />
     <div class="column">

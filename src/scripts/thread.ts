@@ -12,6 +12,12 @@
 // With motion allowed, the thread is drawn as the reader scrolls, and each pin bounces then
 // fills when the tip of the thread reaches it. The path is computed from the layout position
 // of the pins, and computed again whenever the page changes size (fonts, images, resize).
+//
+// The one-page ends under chapter 08 ([data-thread-end], not a [data-pin]: the pins are tied
+// by their index to the chapter index). When the whole thread is drawn, it ties a knot and
+// writes a word, then the rest of the sentence appears in handwriting (CSS, once per visit).
+// The start state (.is-armed) is set here only, never with "reduce motion": without the
+// script, the knot and the words are simply drawn.
 
 const TIP = 0.62; // the tip of the thread sits at 62 % of the screen height
 const STEP = 280; // one wobble point every 280 px between two pins
@@ -25,6 +31,8 @@ export function initThread(host: HTMLElement) {
   const path = svg?.querySelector<SVGPathElement>('path');
   const pins = [...host.querySelectorAll<HTMLElement>('[data-pin]')];
   const toc = [...host.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  const endEl = host.querySelector<HTMLElement>('[data-thread-end]');
+  const endPin = endEl?.querySelector<HTMLElement>('[data-thread-end-pin]');
   if (!svg || !path) return;
 
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -40,6 +48,29 @@ export function initThread(host: HTMLElement) {
   let hostTop = 0;
   let queued = false;
   let ready = false;
+  let plugged = false;
+  let armChecked = false;
+
+  // Latched: once the thread is plugged in, it stays so for the rest of the visit.
+  const plug = () => {
+    if (!endEl || plugged) return;
+    plugged = true;
+    // The knot and the words are only drawn if they were waiting, undrawn.
+    endEl.classList.toggle('is-landing', endEl.classList.contains('is-armed'));
+    endEl.classList.remove('is-armed');
+    endEl.classList.add('is-plugged');
+  };
+  // Decided once, at the first measure. Armed if the knot and the words are still entirely
+  // below the screen, or if the thread is already whole (a reload at the foot of the page): it
+  // then plugs in the same frame, so they are drawn at once. If they already show, with the
+  // thread not there yet, they are never hidden: they simply stay drawn.
+  const arm = (whole: boolean) => {
+    if (!endEl || armChecked) return;
+    armChecked = true;
+    if (still || plugged) return;
+    const note = endEl.querySelector<HTMLElement>('.thread-end__art') ?? endEl;
+    if (whole || note.getBoundingClientRect().top >= window.innerHeight) endEl.classList.add('is-armed');
+  };
 
   function build() {
     const box = host.getBoundingClientRect();
@@ -58,15 +89,22 @@ export function initThread(host: HTMLElement) {
     });
     pinY = pts.map((p) => p.y);
     if (pts.length === 0) return;
+    // Where the thread ties its knot, at the end of the one-page (none on a detailed page).
+    let tie: P | undefined;
+    if (endPin) {
+      const o = layoutOrigin(endPin);
+      tie = { x: o.x - at0.x + endPin.offsetWidth / 2, y: o.y - at0.y + endPin.offsetHeight / 2 };
+    }
     // Nothing moved (fonts, images or a resize that changed nothing): keep the thread as it is.
-    const key = `${w}x${h}|${pts.map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(' ')}`;
+    const key = `${w}x${h}|${[...pts, ...(tie ? [tie] : [])].map((p) => `${Math.round(p.x)},${Math.round(p.y)}`).join(' ')}`;
     if (key === lastKey) return;
     lastKey = key;
 
     const narrow = window.innerWidth < 1024;
-    // The one-page ends a little below its last pin; a detailed page, at the foot of its content.
-    const end = pts.length > 1 ? Math.min(h - 40, pts[pts.length - 1].y + 260) : h - 48;
-    const out = withLoops(looseThread(pts, pins, end, narrow), pts, end);
+    // The one-page ends on its knot (or a little below pin 08 if there is none); a detailed
+    // page, at the foot of its content.
+    const end = tie ? tie.y : pts.length > 1 ? Math.min(h - 40, pts[pts.length - 1].y + 260) : h - 48;
+    const out = withLoops(looseThread(pts, pins, end, narrow, tie), tie ? [...pts, tie] : pts, end);
     if (out.length < 2) return;
     // Never outside the page (the margin is narrow on a laptop or a phone).
     for (const p of out) p.x = Math.min(w - 6, Math.max(6, p.x));
@@ -106,6 +144,11 @@ export function initThread(host: HTMLElement) {
     const tip = window.scrollY >= max - 2 ? Infinity : window.scrollY + window.innerHeight * TIP - hostTop;
     const drawn = still ? total : tip === Infinity ? total : lengthAt(tip);
     path!.style.strokeDashoffset = String(total - drawn);
+    // The whole thread is drawn: it ties its knot (same tolerance as the pins).
+    if (endEl) {
+      arm(drawn >= total - 1);
+      if (!plugged && drawn >= total - 1) plug();
+    }
 
     let current = -1;
     pins.forEach((pin, i) => {
@@ -154,6 +197,7 @@ export function initThread(host: HTMLElement) {
   window.addEventListener('beforeprint', () => {
     path!.style.strokeDashoffset = '0';
     pins.forEach((p) => p.classList.remove('is-wait'));
+    plug();
   });
 }
 
@@ -172,12 +216,12 @@ function layoutOrigin(el: HTMLElement): P {
 }
 
 /**
- * Pin to pin, then to the loose end. Between two pins the thread swings into the left margin
+ * Pin to pin, then to the knot (or the loose end). Between two pins the thread swings into the left margin
  * with a sine arch and wobbles a little; the wobble comes from a fixed sequence, so the thread
  * keeps its shape on every visit. A single pin (a detailed page): the thread leaves it by its
  * left side and runs down the margin to the foot of the page.
  */
-function looseThread(pts: P[], pins: HTMLElement[], end: number, narrow: boolean): P[] {
+function looseThread(pts: P[], pins: HTMLElement[], end: number, narrow: boolean, tie?: P): P[] {
   let seed = 7;
   const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280) * 2 - 1;
   const wob = narrow ? 2.5 : 10;
@@ -199,7 +243,8 @@ function looseThread(pts: P[], pins: HTMLElement[], end: number, narrow: boolean
   for (let i = 0; i < pts.length; i++) {
     const a = pts[i];
     out.push(a);
-    const b = pts[i + 1] ?? { x: a.x, y: end };
+    // After the last chapter pin: the knot, or the loose end below it.
+    const b = pts[i + 1] ?? tie ?? { x: a.x, y: end };
     const swing = narrow ? 0 : Math.min(SWING, Math.max(0, a.x - 18));
     const n = Math.max(1, Math.round((b.y - a.y) / STEP));
     for (let k = 1; k < n; k++) {
@@ -208,7 +253,7 @@ function looseThread(pts: P[], pins: HTMLElement[], end: number, narrow: boolean
       const arch = Math.sin(f * Math.PI);
       out.push({ x: a.x + (b.x - a.x) * f - swing * arch + rand() * wob * arch, y: a.y + (b.y - a.y) * f });
     }
-    if (!pts[i + 1]) out.push(b); // the loose end, below the last pin
+    if (!pts[i + 1]) out.push(b); // the knot, or the loose end
   }
   return out;
 }
