@@ -1,14 +1,14 @@
-// Soft, irregular shapes in the background ("ectoplasms"): crisp blobs a shade lighter than the
-// paper, tone on tone, that slowly change shape. Where the mouse touches an edge, the edge gives
-// way and wobbles back like jelly. They may lie under the text: a lighter background only raises
-// the contrast of the dark text on it.
+// Soft, irregular shapes in the background ("ectoplasms"): crisp blobs a shade lighter or a
+// shade darker than the paper, tone on tone, that slowly change shape. Where the mouse touches
+// an edge, the edge gives way and wobbles back like jelly. They may lie under the text: on the
+// darkest shade, the grey text still measures 4.68:1 (AA).
 //
 // Placed at build time from a seeded sequence, so a page looks the same on every visit, and
 // drawn in their first shape by HTML + CSS alone (no script, "reduce motion"). The script
 // (src/scripts/blobs.ts) only makes them change shape and react.
 
-/** Three shades, all a little lighter than the paper (global.css, .blob--a to c). */
-const SHADES = ['a', 'b', 'c'];
+/** Six shades (global.css): a to c a little lighter than the paper, d to f a little darker. */
+const SHADES = ['a', 'd', 'b', 'e', 'c', 'f'];
 /** Points around a blob: enough for the edge to dent locally, few enough to stay smooth. */
 export const BLOB_POINTS = 18;
 
@@ -28,10 +28,14 @@ function seeded(seed: number) {
   return () => (s = (s * 9301 + 49297) % 233280) / 233280;
 }
 
-/** Radius of point k at time t, around 1: the slow change of shape. */
+/**
+ * Radius of point k at time t, around 1: the slow change of shape. A sum of a few slow, broad
+ * waves around the outline (two, three and four bumps), so the edge stays rounded, never angular.
+ */
 export function blobRadius(phases: number[], speed: number, k: number, t: number): number {
-  const n = phases.length;
-  return 1 + 0.1 * Math.sin(t * 0.35 * speed + phases[k]) + 0.05 * Math.sin(t * 0.6 * speed + phases[(k + 5) % n]);
+  const a = (k / phases.length) * Math.PI * 2;
+  const s = t * speed;
+  return 1 + 0.09 * Math.sin(2 * a + phases[0] + s * 0.3) + 0.06 * Math.sin(3 * a + phases[1] - s * 0.24) + 0.03 * Math.sin(4 * a + phases[2] + s * 0.37);
 }
 
 /**

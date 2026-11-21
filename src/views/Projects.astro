@@ -15,7 +15,7 @@ const { title } = loadPage(lang, '08-projets');
 const chapter = siteData(lang).chapters.find((c) => c.id === 'projects')!;
 ---
 
-<Base lang={lang} id="projects" title={title} description={chapter.desc} blobs={{ seed: 7, count: 2 }}>
+<Base lang={lang} id="projects" title={title} description={chapter.desc} blobs={{ seed: 7, count: 3 }}>
   <div class="page wrap">
     <PageHead num="07" title={title}>
       <p class="page__lead" set:html={inline(chapter.desc)} />

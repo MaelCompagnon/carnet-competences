@@ -27,7 +27,7 @@ const { head, rows } = tableOf(profile);
 const columns = head.map((h, i) => ({ title: h, items: rows.map((r) => r[i]).filter((x) => x && x.trim()) }));
 ---
 
-<Base lang={lang} id="target" title={title} description={chapter.desc} analysis blobs={{ seed: 5, count: 5 }}>
+<Base lang={lang} id="target" title={title} description={chapter.desc} analysis blobs={{ seed: 5, count: 8 }}>
   <article class="page wrap">
     <PageHead num="05" title={title} note={op.chapters[4].note} />
 

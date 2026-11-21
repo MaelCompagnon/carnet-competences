@@ -3148,8 +3148,8 @@ html.lenis {
 }
 
 /* ---------- Background blobs (src/lib/blobs.ts, src/scripts/blobs.ts) ----------
-   Crisp shapes a shade lighter than the paper, tone on tone, behind everything (even the
-   text: a lighter background only raises its contrast). Drawn by HTML and CSS alone (still
+   Crisp shapes a shade lighter or darker than the paper, tone on tone, behind everything
+   (even the text: contrast measured, still AA). Drawn by HTML and CSS alone (still
    without the script or with "reduce motion"); the script changes their outline and moves
    them with the standalone translate property. The layer never affects the layout and clips
    them at its edges (no sideways scroll). Smaller on a phone. */
@@ -3185,6 +3185,19 @@ html.lenis {
 
 .blob--c {
   fill: #f3f0ea;
+}
+
+/* A shade darker than the paper (grey text on #dfdad2: 4.68:1, still AA). */
+.blob--d {
+  fill: #e2ddd3;
+}
+
+.blob--e {
+  fill: #e5dfd4;
+}
+
+.blob--f {
+  fill: #dfdad2;
 }
 
 @media (max-width: 700px) {
